@@ -1,31 +1,46 @@
 class AnycableGo < Formula
-  desc "Anycable Go WebSocket Server"
+  desc "WebSocket server with action cable protocol"
   homepage "https://github.com/anycable/anycable-go"
-  url "https://github.com/anycable/anycable-go/archive/v0.6.4.tar.gz"
-  sha256 "dbcfccdedc7d28d2d70e12a6c2aff77be28a65dcaa27386d3b65465849fff162"
+  url "https://github.com/anycable/anycable-go/archive/v1.0.5.tar.gz"
+  sha256 "3fd4bef8732a7db0a0549b9eefd9f1ce2d295e6fa80e203bf68d6ffbcde2385a"
+  license "MIT"
+  head "https://github.com/anycable/anycable-go.git"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ab783dacc5e7118d049c7b0edb4840c5c0e8e63566a82d977e421426887da412" => :catalina
-    sha256 "a65ac740e2d0ce092b84c958334418b206f725cf2e6fca77be68f146817a5a88" => :mojave
-    sha256 "a9e268c4eb4e313e6fd3b3e6e3508039fb8abb7c0f3ce17f5ce952efc7a5fadc" => :high_sierra
-    sha256 "eec5c786934d53b6260727f73f7a08ed29626aef25782687b0f7251b47f42497" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "aa6fef9beee0168cfd2add48f709ff4212fb2aa6e31839c8a973f0057fc5789b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1e5fde328e13ccb177d0b49f6849f1709513012f1369eed52c54b521cd8c8179"
+    sha256 cellar: :any_skip_relocation, catalina:      "ce4661c31905e67fdebc3f40f62bb35dc627bdf81520459814db3013eaea5cc2"
+    sha256 cellar: :any_skip_relocation, mojave:        "e906e9164d74a2d04c2e35ff7034e7bb7855d42f112f8b9c36b4b72152c92ca5"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/anycable/anycable-go/").install Dir["*"]
-    system "go", "build", "-ldflags", "-s -w -X main.version=#{version}", "-o", "#{bin}/anycable-go", "-v", "github.com/anycable/anycable-go/cmd/anycable-go"
+    ldflags = %w[
+      -s -w
+    ]
+    ldflags << if build.head?
+      "-X github.com/anycable/anycable-go/utils.sha=#{version.commit}"
+    else
+      "-X github.com/anycable/anycable-go/utils.version=#{version}"
+    end
+
+    system "go", "build", "-mod=vendor", "-ldflags", ldflags.join(" "), *std_go_args,
+                          "-v", "github.com/anycable/anycable-go/cmd/anycable-go"
   end
 
   test do
+    port = free_port
     pid = fork do
-      exec "#{bin}/anycable-go"
+      exec "#{bin}/anycable-go --port=#{port}"
     end
     sleep 1
-    output = shell_output("curl -sI http://localhost:8080/health")
+    output = shell_output("curl -sI http://localhost:#{port}/health")
     assert_match(/200 OK/m, output)
   ensure
     Process.kill("HUP", pid)

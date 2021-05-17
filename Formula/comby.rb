@@ -1,20 +1,28 @@
 class Comby < Formula
   desc "Tool for changing code across many languages"
   homepage "https://comby.dev"
-  url "https://github.com/comby-tools/comby/archive/0.11.0.tar.gz"
-  sha256 "4bd35595793bb7ee3f01d406e83d218cef01929a95388a343077b9937c541a94"
+  url "https://github.com/comby-tools/comby/archive/1.5.1.tar.gz"
+  sha256 "cfd75dc9eb1a0e1598f59c2632b9932069eb27793f38786452fbac9e520653dc"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "80eeffb4dbda20a3018af1863353a44628bad2eadefe705c192a176625396c8e" => :catalina
-    sha256 "7b3b29f0c2f32cea7abb9c53def46b0bd789084ace16053107f713324b621e3c" => :mojave
-    sha256 "a1aaaf88033a2f107a8ae36372c31da875d509b823aa1f68278174e95013812c" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "7f5a5449b0bd8222feb40f6ca4ee78926b41edc0633747b7055930ae33199bac"
+    sha256 cellar: :any, big_sur:       "5200c167a04e1ceb32acf47f8b3a22a05d6a972dd96d2c972697b7b8d9537772"
+    sha256 cellar: :any, catalina:      "eb96f282f03bb2faa31b1bb9583211f2225d1de7606d830e7e8a7485c642ec69"
+    sha256 cellar: :any, mojave:        "4bc044f302385e367e43b214aa3da7cd660bf28f5069aab6b2f5fabed5894ed1"
   end
 
+  depends_on "autoconf" => :build
   depends_on "gmp" => :build
+  depends_on "ocaml" => :build
   depends_on "opam" => :build
+  depends_on "pkg-config" => :build
+  depends_on "libev"
   depends_on "pcre"
-  depends_on "pkg-config"
+
+  uses_from_macos "m4"
+  uses_from_macos "sqlite"
+  uses_from_macos "unzip"
   uses_from_macos "zlib"
 
   def install
@@ -23,15 +31,16 @@ class Comby < Formula
     ENV["OPAMROOT"] = opamroot
     ENV["OPAMYES"] = "1"
 
-    system "opam", "init", "--no-setup", "--disable-sandboxing", "--compiler=4.09.0", "--jobs=1"
+    system "opam", "init", "--no-setup", "--disable-sandboxing"
     system "opam", "config", "exec", "--", "opam", "install", ".", "--deps-only", "-y"
+
+    ENV.prepend_path "LIBRARY_PATH", opamroot/"default/lib/hack_parallel" # for -lhp
     system "opam", "config", "exec", "--", "make", "release"
+
     bin.install "_build/default/src/main.exe" => "comby"
   end
 
   test do
-    assert_equal "0.11.0", shell_output("#{bin}/comby -version").strip
-
     expect = <<~EXPECT
       --- /dev/null
       +++ /dev/null

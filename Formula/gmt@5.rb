@@ -1,15 +1,17 @@
 class GmtAT5 < Formula
   desc "Tools for manipulating and plotting geographic and Cartesian data"
-  homepage "https://www.generic-mapping-tools.org"
-  url "ftp://ftp.soest.hawaii.edu/gmt/gmt-5.4.5-src.tar.gz"
-  mirror "https://mirrors.ustc.edu.cn/gmt/gmt-5.4.5-src.tar.xz"
-  mirror "https://fossies.org/linux/misc/GMT/gmt-5.4.5-src.tar.xz"
+  homepage "https://www.generic-mapping-tools.org/"
+  url "https://github.com/GenericMappingTools/gmt/releases/download/5.4.5/gmt-5.4.5-src.tar.gz"
+  mirror "https://mirrors.ustc.edu.cn/gmt/gmt-5.4.5-src.tar.gz"
+  mirror "https://fossies.org/linux/misc/GMT/gmt-5.4.5-src.tar.gz"
   sha256 "225629c7869e204d5f9f1a384c4ada43e243f83e1ed28bdca4f7c2896bf39ef6"
+  license "LGPL-3.0"
+  revision 11
 
   bottle do
-    sha256 "31b9d3f242e271459ccf542c37408a4f35ff294f5d2949330a2f8922e26f7ea4" => :catalina
-    sha256 "88a338eebedde949c06723fa7a8bf462cd9d759c97ba2000b4069e3840dc19c4" => :mojave
-    sha256 "51f8e1cd6a64d50a92d953d79f268907a93b89fe2357aa3326bd3b7af1073107" => :high_sierra
+    sha256 big_sur:  "f42e900ff75b79457fb7c6794ee97ecc660f8b06e906cdcda4e14850c53f4c7b"
+    sha256 catalina: "85846337163db423024a91baddc51b1ceccde32ce4898fe60c1b16a80e7a7b38"
+    sha256 mojave:   "e10f85367529cd119c4a68ec9f07a9821456c85caabeab7f0c081cfaec5330df"
   end
 
   keg_only :versioned_formula
@@ -21,17 +23,23 @@ class GmtAT5 < Formula
   depends_on "pcre"
 
   resource "gshhg" do
-    url "ftp://ftp.soest.hawaii.edu/gmt/gshhg-gmt-2.3.7.tar.gz"
+    url "https://github.com/GenericMappingTools/gshhg-gmt/releases/download/2.3.7/gshhg-gmt-2.3.7.tar.gz"
     mirror "https://mirrors.ustc.edu.cn/gmt/gshhg-gmt-2.3.7.tar.gz"
     mirror "https://fossies.org/linux/misc/GMT/gshhg-gmt-2.3.7.tar.gz"
     sha256 "9bb1a956fca0718c083bef842e625797535a00ce81f175df08b042c2a92cfe7f"
   end
 
   resource "dcw" do
-    url "ftp://ftp.soest.hawaii.edu/gmt/dcw-gmt-1.1.4.tar.gz"
+    url "https://github.com/GenericMappingTools/dcw-gmt/releases/download/1.1.4/dcw-gmt-1.1.4.tar.gz"
     mirror "https://mirrors.ustc.edu.cn/gmt/dcw-gmt-1.1.4.tar.gz"
     mirror "https://fossies.org/linux/misc/GMT/dcw-gmt-1.1.4.tar.gz"
     sha256 "8d47402abcd7f54a0f711365cd022e4eaea7da324edac83611ca035ea443aad3"
+  end
+
+  # netcdf 4.7.4 compatibility
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/cdbf0de198531528db908a5d827f3d2e5b9618cc/gmt%405/netcdf-4.7.4.patch"
+    sha256 "d894869830f6e57b0670dc31df6b5c684e079418f8bf5c0cd0f7014b65c1981f"
   end
 
   def install
@@ -62,10 +70,11 @@ class GmtAT5 < Formula
     end
   end
 
-  def caveats; <<~EOS
-    GMT needs Ghostscript for the 'psconvert' command to convert PostScript files
-    to other formats. To use 'psconvert', please 'brew install ghostscript'.
-  EOS
+  def caveats
+    <<~EOS
+      GMT needs Ghostscript for the 'psconvert' command to convert PostScript files
+      to other formats. To use 'psconvert', please 'brew install ghostscript'.
+    EOS
   end
 
   test do

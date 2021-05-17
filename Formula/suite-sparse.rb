@@ -1,21 +1,38 @@
 class SuiteSparse < Formula
   desc "Suite of Sparse Matrix Software"
-  homepage "http://faculty.cse.tamu.edu/davis/suitesparse.html"
-  url "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v5.6.0.tar.gz"
-  sha256 "76d34d9f6dafc592b69af14f58c1dc59e24853dcd7c2e8f4c98ffa223f6a1adb"
+  homepage "https://people.engr.tamu.edu/davis/suitesparse.html"
+  url "https://github.com/DrTimothyAldenDavis/SuiteSparse/archive/v5.9.0.tar.gz"
+  sha256 "7bdd4811f1cf0767c5fdb5e435817fdadee50b0acdb598f4882ae7b8291a7f24"
+  license all_of: [
+    "BSD-3-Clause",
+    "LGPL-2.1-or-later",
+    "GPL-2.0-or-later",
+    "Apache-2.0",
+    "GPL-3.0-only",
+    any_of: ["LGPL-3.0-or-later", "GPL-2.0-or-later"],
+  ]
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "8eb58bbbd72d6ccc7a4aba9b2809a6dbd644fa885ff4928c1e407d468312b1a3" => :catalina
-    sha256 "d120874fd9475e4b65f2314da7db2cad5b20e2ece303c58a6cbd6dd36f8e47cf" => :mojave
-    sha256 "d578edbc2eb5813a86a85b7e2af8083bfcf3dc6aa265263b9c1c87feeb2cbd4a" => :high_sierra
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "b45ef039ffd66c0166b487840a19c66b7ad260e32566685b61de30b3a7532719"
+    sha256 cellar: :any, big_sur:       "50a18520d9099373434967e3a275f110fbb43aacb3120ab242532b3e21551f2b"
+    sha256 cellar: :any, catalina:      "61a1de9849c6b9ed4291f543899814b2da4e9db629b1b6920fbc4d556f1379c3"
+    sha256 cellar: :any, mojave:        "9950440e6259dff3c96d5f29bb5b50435ab02b4371095f89da4a3f5351cba752"
   end
 
   depends_on "cmake" => :build
   depends_on "metis"
   depends_on "openblas"
+  depends_on "tbb"
 
-  conflicts_with "mongoose", :because => "suite-sparse vendors libmongoose.dylib"
+  uses_from_macos "m4"
+
+  conflicts_with "mongoose", because: "suite-sparse vendors libmongoose.dylib"
 
   def install
     mkdir "GraphBLAS/build" do

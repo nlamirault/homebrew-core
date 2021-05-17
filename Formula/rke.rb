@@ -1,29 +1,23 @@
 class Rke < Formula
   desc "Rancher Kubernetes Engine, a Kubernetes installer that works everywhere"
-  homepage "https://rancher.com/docs/rke/v0.1.x/en/"
-  url "https://github.com/rancher/rke.git",
-      :tag      => "v0.3.2",
-      :revision => "27708fd2a260c974af3335d11c2dc3cde79a79a8"
+  homepage "https://rancher.com/docs/rke/latest/en/"
+  url "https://github.com/rancher/rke/archive/v1.2.8.tar.gz"
+  sha256 "c42a8f088884dbe0f2c01756d2fb56780b5e7cc92234f386b773996782423529"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e5b2fca85df079ae2a14fdbb3f1865237512ad0a97b4a1d7a09bb77b2de4ee82" => :catalina
-    sha256 "ddfd000c7f4117518ac3e5f69dc0a2b9b2026c2cda9eac9bbf736a9ea21a7a2e" => :mojave
-    sha256 "12fa9742ab07dd8f404443380979631e1fba33ade10844e6201a52290761b275" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "54083beed14c0c861225d9ab0699e7a66bfe7b6777a5e4c30d49af4c15eab8b7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "78c70c924911a86b00ecbc11fb2e154641b12014fb267282a67d2ab26ebe40ac"
+    sha256 cellar: :any_skip_relocation, catalina:      "c0eeb73161d08e6e60c99e452d01544c4df218bc94270a5e644c3746e049fc87"
+    sha256 cellar: :any_skip_relocation, mojave:        "5411e2062eac433bf89b2d4970284c8b2eaeca272816fa87e8dd378eed56ac3a"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/rancher/rke").install buildpath.children
-
-    cd "src/github.com/rancher/rke" do
-      system "go", "build", "-ldflags",
-             "-w -X main.VERSION=v#{version}",
-             "-o", bin/"rke"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-ldflags",
+            "-w -X main.VERSION=v#{version}",
+            "-o", bin/"rke"
   end
 
   test do

@@ -3,14 +3,15 @@ class LibbitcoinClient < Formula
   homepage "https://github.com/libbitcoin/libbitcoin-client"
   url "https://github.com/libbitcoin/libbitcoin-client/archive/v3.6.0.tar.gz"
   sha256 "75969ac0a358458491b101cae784de90452883b5684199d3e3df619707802420"
-  revision 2
+  license "AGPL-3.0"
+  revision 6
 
   bottle do
-    cellar :any
-    sha256 "67029f654c45056f7faf25ca11b9af04d10445d7069c61ae75809fef722f9b16" => :catalina
-    sha256 "4dbcca399cd43cb845edac0cf63a158225b1f3fb40b9f48c11e12075099ea316" => :mojave
-    sha256 "1a0523b5f60efb58a6f4686ce98eaf023054823abddb4c485015df2235f95b17" => :high_sierra
-    sha256 "440e593fbe96d541212c8ce2f00f006c2f78ac05bbd116508e5a8baccde376bd" => :sierra
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "9ec8c3681172a8043fbb24a321b2b07fbc100073a6bf6fd65d089389ef954b45"
+    sha256 cellar: :any, big_sur:       "8bfcea7f689c6fc88052ce69aba9d4f6697ebd87b437254c14a1fd42ffbc5cfa"
+    sha256 cellar: :any, catalina:      "536dcc26e62ab4b2f302e197e44976ef594da699aff73243581f6dbb723bf007"
+    sha256 cellar: :any, mojave:        "53775e2543b62055f7fa37824c51582e06999db7ae6e1934828e3f14165716b7"
   end
 
   depends_on "autoconf" => :build
@@ -25,7 +26,8 @@ class LibbitcoinClient < Formula
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
   end
 

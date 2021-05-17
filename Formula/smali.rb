@@ -1,38 +1,28 @@
 class Smali < Formula
   desc "Assembler/disassembler for Android's Java VM implementation"
   homepage "https://github.com/JesusFreke/smali"
-  url "https://bitbucket.org/JesusFreke/smali/downloads/smali-2.3.4.jar"
-  sha256 "a7c3bedc9c2a82191a30cfd1a0191f984f7b9add5a75112a7c9686d01dd99d0b"
+  url "https://github.com/JesusFreke/smali/archive/v2.5.2.tar.gz"
+  sha256 "2c42f0b1768a5ca0f9e7fe2241962e6ab54940964d60e2560c67b0029dac7bf1"
+  license "BSD-3-Clause"
 
-  bottle :unneeded
-
-  resource "baksmali-jar" do
-    url "https://bitbucket.org/JesusFreke/smali/downloads/baksmali-2.3.4.jar"
-    sha256 "4896337b63a48c318de35f1f861b2a374d0f1ad6b17b6067e16b7d788e8ce4ef"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "fa384e0623d92232575207c1d393204e05254206e9309b9160be038f698bcb11"
+    sha256 cellar: :any_skip_relocation, big_sur:       "508115afcebb6b4fe2b6491652cc386633144cb48669fd4624eb60542fa43fd8"
+    sha256 cellar: :any_skip_relocation, catalina:      "95c45f88283b8e8e7a4563440bb9e3ed10f93dfe43eac5e927ae1ebae65dac0b"
+    sha256 cellar: :any_skip_relocation, mojave:        "44fc500be24c9cc38b5c7031cf600019083c5385e18bd067eeacb1424061d0c9"
   end
 
-  resource "baksmali" do
-    url "https://bitbucket.org/JesusFreke/smali/downloads/baksmali"
-    sha256 "5d4b79776d401f2cbdb66c7c88e23cca773b9a939520fef4bf42e2856bbbfed4"
-  end
-
-  resource "smali" do
-    url "https://bitbucket.org/JesusFreke/smali/downloads/smali"
-    sha256 "910297fbeefb4590e6bffd185726c878382a0960fb6a7f0733f045b6faf60a30"
-  end
+  depends_on "gradle" => :build
+  depends_on "openjdk"
 
   def install
-    resource("baksmali-jar").stage do
-      libexec.install "baksmali-#{version}.jar" => "baksmali.jar"
-    end
+    system "gradle", "build", "--no-daemon"
 
-    libexec.install "smali-#{version}.jar" => "smali.jar"
+    %w[smali baksmali].each do |name|
+      jarfile = "#{name}-#{version}-dev-fat.jar"
 
-    %w[smali baksmali].each do |r|
-      libexec.install resource(r)
-      inreplace libexec/r, /^libdir=.*$/, "libdir=\"#{libexec}\""
-      chmod 0755, libexec/r
-      bin.install_symlink libexec/r
+      libexec.install "#{name}/build/libs/#{jarfile}"
+      bin.write_jar_script libexec/jarfile, name
     end
   end
 

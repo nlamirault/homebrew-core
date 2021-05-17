@@ -1,11 +1,15 @@
 class Bundletool < Formula
   desc "Command-line tool to manipulate Android App Bundles"
   homepage "https://github.com/google/bundletool"
-  url "https://github.com/google/bundletool/releases/download/0.11.0/bundletool-all-0.11.0.jar"
-  sha256 "f869bd8b580065c0a983b69d30497293cc8ebcec03b1b20b74f1ab87b98455eb"
+  url "https://github.com/google/bundletool/releases/download/1.6.0/bundletool-all-1.6.0.jar"
+  sha256 "fdabaa9137dd9d346a3571d010ee4404a4bae3f1641ebe2236ed4b74ee73bf6f"
+  license "Apache-2.0"
 
-  bottle :unneeded
-  depends_on :java => "1.8+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "989bf92b21f7bf41622c93906e17597fdfcf970fde02e1476b6797b42e2d8baf"
+  end
+
+  depends_on "openjdk"
 
   resource "bundle" do
     url "https://gist.githubusercontent.com/raw/ca85ede7ac072a44f48c658be55ff0d3/sample.aab"
@@ -13,8 +17,11 @@ class Bundletool < Formula
   end
 
   def install
-    libexec.install "bundletool-all-#{version}.jar"
-    bin.write_jar_script libexec/"bundletool-all-#{version}.jar", "bundletool"
+    libexec.install "bundletool-all-#{version}.jar" => "bundletool-all.jar"
+    (bin/"bundletool").write <<~EOS
+      #!/bin/bash
+      exec "#{Formula["openjdk"].opt_bin}/java" -jar "#{libexec}/bundletool-all.jar" "$@"
+    EOS
   end
 
   test do

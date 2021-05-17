@@ -1,16 +1,18 @@
 class Fio < Formula
   desc "I/O benchmark and stress test"
   homepage "https://github.com/axboe/fio"
-  url "https://github.com/axboe/fio/archive/fio-3.16.tar.gz"
-  sha256 "c7731a9e831581bab7104da9ea60c9f44e594438dbe95dff26726ca0285e7b93"
+  url "https://github.com/axboe/fio/archive/fio-3.26.tar.gz"
+  sha256 "8bd6987fd9b8c2a75d3923661566ade50b99f61fa4352148975e65577ffa4024"
+  license "GPL-2.0-only"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "992d93124d0f3312cff47e4a11eabd74dec486042881a0a314bb51f596d5a9af" => :catalina
-    sha256 "6d184581dc68669bc1fcf2b6436d5d856bf50bcdf95b6a058467ec6e2dfd61a2" => :mojave
-    sha256 "9d1f05f9bc6a04d81a88c05284344250e21446679243d5c9fccfcd4d51f85002" => :high_sierra
-    sha256 "e41a6a72db927e9952d7025f1a64d8b5678a3f1d283570207110c1ddd766d467" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "949a998dc431640d091b39ba4d3ce25903964b520e69100d67cd1a3fe91cb3cf"
+    sha256 cellar: :any_skip_relocation, big_sur:       "443b0bd05c862371e76f9f19e852c30610f0816ba1942b9e35a3344211e5b92d"
+    sha256 cellar: :any_skip_relocation, catalina:      "b18a7907fab50e9214e195a8a9b108c9d66a74021603fe06ecab06bc98519269"
+    sha256 cellar: :any_skip_relocation, mojave:        "c966e2007d05310a20f846ac51477201f7efb09d09762d9fdb10529a1975ba8f"
   end
+
+  uses_from_macos "zlib"
 
   def install
     system "./configure"

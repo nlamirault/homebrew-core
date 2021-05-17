@@ -1,35 +1,29 @@
 class Chamber < Formula
   desc "CLI for managing secrets through AWS SSM Parameter Store"
   homepage "https://github.com/segmentio/chamber"
-  url "https://github.com/segmentio/chamber/archive/v2.7.5.tar.gz"
-  sha256 "be252801b89cd88a651833d1f4770e50ef1c46283190096dda71a902c35085aa"
+  url "https://github.com/segmentio/chamber/archive/v2.10.0.tar.gz"
+  sha256 "d5556a77f5c825fbc3dfd2e9974b3f14aaf8a244b3a903741035faf32892f11c"
+  license "MIT"
   head "https://github.com/segmentio/chamber.git"
 
+  livecheck do
+    url :stable
+    regex(%r{href=.*?/tag/v?(\d+(?:\.\d+)+(?:-ci\d)?)["' >]}i)
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "335df38f4c238f4a5d2a16fecb69939ed6713ed8dd8d973982ca24f39360c472" => :catalina
-    sha256 "5dd2e5805853221f8cbe79083c7fdf13d85f16c70885d8cc78bacef7e641ee82" => :mojave
-    sha256 "5dd41982896b1d61207d658897e415e7bd9cbadf6c81c6362d592d9c50006bf7" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "434e7f69d1742843106b71893f7993917b6ae0e631eb5e176b7b6134a880eab6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "70c7daed2a2bc41ac6bfaf1d89d94dd24659f06d309542bbca667a5c8646444e"
+    sha256 cellar: :any_skip_relocation, catalina:      "1280d86ef815339d4ed410b24aaacaaf02c7521acda2d303951103e8feba2289"
+    sha256 cellar: :any_skip_relocation, mojave:        "700a24a9ba6adf62e377aa767fd80ad4c74d87eea4c136da2660bd2aa9575284"
   end
 
   depends_on "go" => :build
-  depends_on "govendor" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["GOOS"] = "darwin"
-    ENV["GOARCH"] = "amd64"
-    ENV["CGO_ENABLED"] = "0"
-
-    path = buildpath/"src/github.com/segmentio/chamber"
-    path.install Dir["{*,.git}"]
-
-    cd "src/github.com/segmentio/chamber" do
-      system "govendor", "sync"
-      system "go", "build", "-o", bin/"chamber",
-                   "-ldflags", "-X main.Version=#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-ldflags", "-s -w -X main.Version=v#{version}", "-trimpath", "-o", bin/"chamber"
+    prefix.install_metafiles
   end
 
   test do

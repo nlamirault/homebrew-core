@@ -1,23 +1,32 @@
+require "language/perl"
+
 class Asciiquarium < Formula
+  include Language::Perl::Shebang
+
   desc "Aquarium animation in ASCII art"
   homepage "https://robobunny.com/projects/asciiquarium/html/"
   url "https://robobunny.com/projects/asciiquarium/asciiquarium_1.1.tar.gz"
   sha256 "1b08c6613525e75e87546f4e8984ab3b33f1e922080268c749f1777d56c9d361"
-  revision 1
+  license "GPL-2.0-or-later"
+  revision 2
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "9bf092861aad33c28e8f753d79032eb9af48521508dbee0a5ec6dc3646e6cc89" => :catalina
-    sha256 "7c9263400bd1045b998e5f48d34d79fa4df0e27daf5f9c49afb1ed283a39f537" => :mojave
-    sha256 "10d2a74f8e447c87fa477de74aa692a1d0043ab508e9a924126e0a3d55ffe5a7" => :high_sierra
-    sha256 "890b0e69b0261ff61b0d0666f2b3e0f579c1f63556c77c2d8d24bc1ef3f4e241" => :sierra
-    sha256 "9120f02b70c63672af2752de536aeaeac5ef57bc2b3a388afe1ab9e12d40a59b" => :el_capitan
-    sha256 "6b20abf264f40c7123e40f0f34cfc11f0c12a03b1a74a324e3f3a7ae75e94f3f" => :yosemite
+  livecheck do
+    url "https://robobunny.com/projects/asciiquarium/"
+    regex(/href=.*?asciiquarium[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
+  bottle do
+    sha256 cellar: :any, big_sur:  "b265b239e7c9d417614d16e8df9d000b4b5a74419fa3b9c951f89e38e2d6f2c5"
+    sha256 cellar: :any, catalina: "549e7df42d697e47ff38029b4e0d3df4404046ba52296e713b47d02aab0babe7"
+    sha256 cellar: :any, mojave:   "75d26ee7c7db2b3f8a66216224a13405288fa436123c5c80e53b2f9a9bcfdb3b"
+  end
+
+  depends_on "ncurses"
+  depends_on "perl"
+
   resource "Curses" do
-    url "https://cpan.metacpan.org/authors/id/G/GI/GIRAFFED/Curses-1.34.tar.gz"
-    sha256 "808e44d5946be265af5ff0b90f3d0802108e7d1b39b0fe68a4a446fe284d322b"
+    url "https://cpan.metacpan.org/authors/id/G/GI/GIRAFFED/Curses-1.37.tar.gz"
+    sha256 "74707ae3ad19b35bbefda2b1d6bd31f57b40cdac8ab872171c8714c88954db20"
   end
 
   resource "Term::Animation" do
@@ -39,11 +48,11 @@ class Asciiquarium < Formula
     # Disable dynamic selection of perl which may cause segfault when an
     # incompatible perl is picked up.
     # https://github.com/Homebrew/homebrew-core/issues/4936
-    inreplace "asciiquarium", "#!/usr/bin/env perl", "#!/usr/bin/perl"
+    rewrite_shebang detected_perl_shebang, "asciiquarium"
 
     chmod 0755, "asciiquarium"
     bin.install "asciiquarium"
-    bin.env_script_all_files(libexec/"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec/"bin", PERL5LIB: ENV["PERL5LIB"])
   end
 
   test do
@@ -59,10 +68,14 @@ class Asciiquarium < Formula
 
     require "pty"
     ENV["TERM"] = "xterm"
-    PTY.spawn(bin/"asciiquarium") do |stdin, _stdout, pid|
-      sleep 0.1
-      Process.kill "TERM", pid
-      output = stdin.read
+    PTY.spawn(bin/"asciiquarium") do |stdout, stdin, _pid|
+      sleep 1
+      stdin.write "q"
+      output = begin
+        stdout.gets
+      rescue Errno::EIO
+        nil
+      end
       assert_match "\e[?10", output[0..4]
     end
   end

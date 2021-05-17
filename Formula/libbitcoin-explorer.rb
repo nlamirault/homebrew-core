@@ -3,13 +3,15 @@ class LibbitcoinExplorer < Formula
   homepage "https://github.com/libbitcoin/libbitcoin-explorer"
   url "https://github.com/libbitcoin/libbitcoin-explorer/archive/v3.6.0.tar.gz"
   sha256 "e1b3fa2723465f7366a6e8c55e14df53106e90b82cc977db638c78f9bc5c47db"
-  revision 2
+  license "AGPL-3.0"
+  revision 6
 
   bottle do
-    sha256 "88a2bd27ea60557bddd05e5fd323502e121ba53559fb9b80b937a80e7e1bf37a" => :catalina
-    sha256 "41848d34f2e61b546b6eddeaea5f2c78f807e550495704925c52b1d0cdec8039" => :mojave
-    sha256 "1e7087e8f4468f9e5a23740dad4545a35fc94b255fbd2a8c2eefa4f60b6e2e09" => :high_sierra
-    sha256 "d2b4d343f9bc7d7a09e481b2d26b7cf0283a8cc717d92e02266ca7c48fb4bf12" => :sierra
+    rebuild 1
+    sha256 arm64_big_sur: "a866aa41b640d5ec17b2195b6e020e90ff387ed463ae2e70f2a03fd8bd072896"
+    sha256 big_sur:       "24e7833731351a531a6f9c7e6a6ec0687498a138a5cfb3728ecb550ff60410e8"
+    sha256 catalina:      "bdc450751d9191cef4f000156ed8c3b393948035c6b0cd86b598094eed722998"
+    sha256 mojave:        "14108b07fc37f335a97fde46ce97c0ea4778fa013bbdce547265f9065f372af9"
   end
 
   depends_on "autoconf" => :build
@@ -25,7 +27,8 @@ class LibbitcoinExplorer < Formula
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
 
     bash_completion.install "data/bx"

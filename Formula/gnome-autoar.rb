@@ -1,16 +1,23 @@
 class GnomeAutoar < Formula
   desc "GNOME library for archive handling"
   homepage "https://github.com/GNOME/gnome-autoar"
-  url "https://download.gnome.org/sources/gnome-autoar/0.2/gnome-autoar-0.2.3.tar.xz"
-  sha256 "5de9db0db028cd6cab7c2fec46ba90965474ecf9cd68cfd681a6488cf1fb240a"
-  revision 2
+  url "https://download.gnome.org/sources/gnome-autoar/0.3/gnome-autoar-0.3.2.tar.xz"
+  sha256 "a48c4d5ce9a9ed05ba8bc8fdeb9af2d1a7bd8091c2911d6c37223c4f488f7c72"
+  license "LGPL-2.1-or-later"
+
+  # gnome-autoar doesn't seem to follow the typical GNOME version format where
+  # even-numbered minor versions are stable, so we override the default regex
+  # from the `Gnome` strategy.
+  livecheck do
+    url :stable
+    regex(/gnome-autoar[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "0d7698b746f7d95db0f74f8a9e52143e547b6f931f5879d1ee0ec5bddbb95dc9" => :catalina
-    sha256 "d4eb4086335d897d68ee5a0d09947f500e18a93161429473d44d6cb81b962bf1" => :mojave
-    sha256 "007d55df1aea731560ecef0221251db7285e6b4fdd5b266680e6e5e55a6c2074" => :high_sierra
-    sha256 "0bf8f1ccb106a998b22d7f0da8636ba355a9f984d81b4282db04b021db2c9ce9" => :sierra
+    sha256 arm64_big_sur: "9131135c17ff79369287f29f4d4ce9d4417eaa4aea461993cdd5af9e8aa339b2"
+    sha256 big_sur:       "20fa2dbf06e115fc9208cced8767d863444ec6f276ccf9450da47520da3e2d1a"
+    sha256 catalina:      "d3daadf0be9954fbc858f7dd24f99e057141000bf5ab2f98e03df62c23302dbc"
+    sha256 mojave:        "008ece3e0e9df980eb646b78a3e5b1cc475e6180aeaca9e7a37d6409a2fc8e3b"
   end
 
   depends_on "pkg-config" => :build
@@ -18,7 +25,6 @@ class GnomeAutoar < Formula
   depends_on "libarchive"
 
   def install
-    ENV.delete "SDKROOT"
     system "./configure", "--disable-debug",
                           "--disable-dependency-tracking",
                           "--disable-silent-rules",

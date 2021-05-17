@@ -3,12 +3,14 @@ class Cp2k < Formula
   homepage "https://www.cp2k.org/"
   url "https://github.com/cp2k/cp2k/releases/download/v6.1.0/cp2k-6.1.tar.bz2"
   sha256 "af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b"
-  revision 1
+  license "GPL-2.0"
+  revision 3
 
   bottle do
-    sha256 "f57bdd527461a9c729494afaf3e19b273f49a312793fe4086707895acb50fa7f" => :mojave
-    sha256 "e86f5342c610a9c5c43a2437666b32bffff72c238ed7e2bb0b9bf87a4e13a926" => :high_sierra
-    sha256 "295bc278f7508ceb437e81972d10b30177df05657e3a5945b1eabfc441e05499" => :sierra
+    sha256 arm64_big_sur: "32eb4f7cffffe7f0690918d5d0d112d3d914c623b9a22cf56845c7a2b917eb49"
+    sha256 big_sur:       "53e46178fc2fc84eb58ffd165aac614bc2cb6912145b40d4447716245b4234bc"
+    sha256 catalina:      "5d329a2fa68e818f75237fefd4749a590c115a4ca1330fd20782c49fd0b9793d"
+    sha256 mojave:        "9b05551c6ba11e1f7144c23ca35d687793cb0fa219c7fb4fc4d55aa7ea793c5a"
   end
 
   depends_on "fftw"
@@ -24,6 +26,13 @@ class Cp2k < Formula
     sha256 "31d7dd553c7b1a773863fcddc15ba9358bdcc58f5962c9fcee1cd24f309c4198"
   end
 
+  # Upstream fix for GCC 10, remove in next version
+  # https://github.com/cp2k/dbcsr/commit/fe71e6fe
+  patch do
+    url "https://github.com/Homebrew/formula-patches/raw/0c086813/cp2k/gcc10.diff"
+    sha256 "dfaa319c999d49faae86cafe58ddb3b696f72a89f7cc85acd47b3288c6b9ac89"
+  end
+
   def install
     resource("libint").stage do
       system "./configure", "--prefix=#{libexec}"
@@ -31,9 +40,12 @@ class Cp2k < Formula
       ENV.deparallelize { system "make", "install" }
     end
 
+    # -fallow-argument-mismatch should be removed when the issue is fixed:
+    # https://github.com/cp2k/cp2k/issues/969
     fcflags = %W[
       -I#{Formula["fftw"].opt_include}
       -I#{libexec}/include
+      -fallow-argument-mismatch
     ]
 
     libs = %W[
@@ -47,9 +59,9 @@ class Cp2k < Formula
 
     # CP2K configuration is done through editing of arch files
     inreplace Dir["arch/Darwin-IntelMacintosh-gfortran.*"].each do |s|
-      s.gsub! /DFLAGS *=/, "DFLAGS = -D__FFTW3"
-      s.gsub! /FCFLAGS *=/, "FCFLAGS = #{fcflags.join(" ")}"
-      s.gsub! /LIBS *=/, "LIBS = #{libs.join(" ")}"
+      s.gsub!(/DFLAGS *=/, "DFLAGS = -D__FFTW3")
+      s.gsub!(/FCFLAGS *=/, "FCFLAGS = #{fcflags.join(" ")}")
+      s.gsub!(/LIBS *=/, "LIBS = #{libs.join(" ")}")
     end
 
     # MPI versions link to scalapack

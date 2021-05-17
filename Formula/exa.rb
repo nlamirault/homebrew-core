@@ -1,27 +1,51 @@
 class Exa < Formula
   desc "Modern replacement for 'ls'"
   homepage "https://the.exa.website"
-  url "https://github.com/ogham/exa/archive/v0.9.0.tar.gz"
-  sha256 "96e743ffac0512a278de9ca3277183536ee8b691a46ff200ec27e28108fef783"
+  url "https://github.com/ogham/exa/archive/v0.10.1.tar.gz"
+  sha256 "ff0fa0bfc4edef8bdbbb3cabe6fdbd5481a71abbbcc2159f402dea515353ae7c"
+  license "MIT"
   head "https://github.com/ogham/exa.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "cc484e7deb12cdae4ede810258be0ca069d7db395897e9d3fbadd501fb075743" => :catalina
-    sha256 "bc80009ad845d914c08e6de1c39c97e0f4f180ef4f077b3ef1957cab519d6743" => :mojave
-    sha256 "7382b758899c756f94c4c99440f71075945d333e302e53139e423fb1798c852e" => :high_sierra
-    sha256 "9499359da5f5fffbd8b22c8cb8e78f0fdf99594c4d2b06e7ba58eb21afbcb582" => :sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on "cmake" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "caac7c603cded147f69fec0b64deb28017b747861cd6ec0f7aa1df9d6a1387e6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c3bc35df4c4957502d687da38bb7b4cdf1c2239b35bfdddebe004f05081c246e"
+    sha256 cellar: :any_skip_relocation, catalina:      "e1d7aae78877242d8b2678744940d4fcb56a393fd4d69b0290f7da54e08a8b2b"
+    sha256 cellar: :any_skip_relocation, mojave:        "935794d2a1521fc3645f48eaec3035748cde91b183a23bb0c68b069f1187aae9"
+  end
+
+  depends_on "pandoc" => :build unless Hardware::CPU.arm?
   depends_on "rust" => :build
 
-  def install
-    system "make", "install", "PREFIX=#{prefix}"
+  uses_from_macos "zlib"
 
-    bash_completion.install "contrib/completions.bash" => "exa"
-    zsh_completion.install  "contrib/completions.zsh"  => "_exa"
-    fish_completion.install "contrib/completions.fish" => "exa.fish"
+  on_linux do
+    depends_on "libgit2"
+  end
+
+  def install
+    system "cargo", "install", *std_cargo_args
+
+    bash_completion.install "completions/completions.bash" => "exa"
+    zsh_completion.install  "completions/completions.zsh"  => "_exa"
+    fish_completion.install "completions/completions.fish" => "exa.fish"
+
+    args = %w[
+      --standalone
+      --to=man
+    ]
+
+    unless Hardware::CPU.arm?
+      system "pandoc", *args, "man/exa.1.md", "-o", "exa.1"
+      system "pandoc", *args, "man/exa_colors.5.md", "-o", "exa_colors.5"
+
+      man1.install "exa.1"
+      man5.install "exa_colors.5"
+    end
   end
 
   test do

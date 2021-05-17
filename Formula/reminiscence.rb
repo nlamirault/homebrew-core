@@ -1,14 +1,19 @@
 class Reminiscence < Formula
   desc "Flashback engine reimplementation"
   homepage "http://cyxdown.free.fr/reminiscence/"
-  url "http://cyxdown.free.fr/reminiscence/REminiscence-0.4.5.tar.bz2"
-  sha256 "108ec26b71539a0697eff97498c31a26a10278892649584531732a0df0472abf"
+  url "http://cyxdown.free.fr/reminiscence/REminiscence-0.4.7.tar.bz2"
+  sha256 "ef06d6230f9cae55177777713ccac5d2bb4913f075d0b964d593e41e22612874"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?REminiscence[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "fb9ac602c0bf9afe43287302a18e9a47d3cc27f2ef894fbfce60a90594e750ad" => :catalina
-    sha256 "165e1694ef3880e68eecb99e1288fc7aa3d31d54cd15240757aa60292c479bda" => :mojave
-    sha256 "b991cb2fbd838085444fe0267b352b9cce450892aa0982e3a5166ce2bfcc0cff" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "2bfceaf5574bb466177bea7a5cc2f6137212eba2d4cc4b6c547efcea3af5f52b"
+    sha256 cellar: :any, big_sur:       "94e240b118e26f65e12fe087ba325a924841cdb57de69206f7433f4976b3ae55"
+    sha256 cellar: :any, catalina:      "e5e9f65d1dcdfd16cea37f66f4d7f30a051fd5252bc330cb1e2c5740fb939d11"
+    sha256 cellar: :any, mojave:        "1f9a8d59c676baae13f81ab411be784be4f7ae0cc55bee6ed2e14bab210473b7"
   end
 
   depends_on "autoconf" => :build
@@ -19,9 +24,11 @@ class Reminiscence < Formula
   depends_on "libogg"
   depends_on "sdl2"
 
+  uses_from_macos "zlib"
+
   resource "tremor" do
-    url "https://git.xiph.org/tremor.git",
-        :revision => "7c30a66346199f3f09017a09567c6c8a3a0eedc8"
+    url "https://gitlab.xiph.org/xiph/tremor.git",
+        revision: "7c30a66346199f3f09017a09567c6c8a3a0eedc8"
   end
 
   def install
@@ -31,12 +38,6 @@ class Reminiscence < Formula
                              "--prefix=#{libexec}",
                              "--disable-static"
       system "make", "install"
-    end
-
-    # fix for files missing from archive, reported upstream via email
-    inreplace "Makefile" do |s|
-      s.gsub! "-DUSE_STATIC_SCALER", ""
-      s.gsub! "SCALERS :=", "#SCALERS :="
     end
 
     ENV.prepend "CPPFLAGS", "-I#{libexec}/include"

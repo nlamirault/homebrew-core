@@ -3,14 +3,20 @@ require "language/node"
 class Terrahub < Formula
   desc "Terraform automation and orchestration tool"
   homepage "https://docs.terrahub.io"
-  url "https://registry.npmjs.org/terrahub/-/terrahub-0.4.0.tgz"
-  sha256 "70154594a2182d00ed3b6036f2f30e81627f5fcb6a625d41a7fb3dbcc9165bcc"
+  url "https://registry.npmjs.org/terrahub/-/terrahub-0.5.2.tgz"
+  sha256 "afb6a0d572a56e078f8b55d22f69e9743d12530a9a51d4d4da5a5073785bca95"
+  license "MPL-2.0"
+
+  livecheck do
+    url "https://registry.npmjs.org/terrahub/latest"
+    regex(/"version":\s*?"([^"]+)"/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "baf941487f2a10d79d60e9efe75bd4c265d8f92e6d9c256b4fa105e200b07524" => :catalina
-    sha256 "41601b41eba78b53664f63af80ce0db02a5bd443ccc6653cd952171e627a1907" => :mojave
-    sha256 "6e2de11ff488288aeb140e9bed3b481fd018789fcbaac81f8126eec3603b7a65" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f9cd5b24c1b87a231d48df5da617fa8242339c92246c490a5a0ea1a4e7fb9442"
+    sha256 cellar: :any_skip_relocation, big_sur:       "2701a88dd0f650440fc3dfd89f5f3a7fc92be873af5d52f9ead161565f890718"
+    sha256 cellar: :any_skip_relocation, catalina:      "cc78150685716c025d3ce250560a740adb9c3a31fa18ba77ef9a4e941c0f8ab1"
+    sha256 cellar: :any_skip_relocation, mojave:        "1a309ff327dde46de69818a4f4daf2d2a4589e3c0a353830e4b77e862898c85d"
   end
 
   depends_on "node"

@@ -1,17 +1,16 @@
 class RabbitmqC < Formula
-  desc "RabbitMQ C client"
+  desc "C AMQP client library for RabbitMQ"
   homepage "https://github.com/alanxz/rabbitmq-c"
-  url "https://github.com/alanxz/rabbitmq-c/archive/v0.9.0.tar.gz"
-  sha256 "316c0d156452b488124806911a62e0c2aa8a546d38fc8324719cd29aaa493024"
-  revision 1
+  url "https://github.com/alanxz/rabbitmq-c/archive/v0.11.0.tar.gz"
+  sha256 "437d45e0e35c18cf3e59bcfe5dfe37566547eb121e69fca64b98f5d2c1c2d424"
+  license "MIT"
   head "https://github.com/alanxz/rabbitmq-c.git"
 
   bottle do
-    cellar :any
-    sha256 "704101f05c0bf2ee9b10b6c72918753dde7fa5983e139ba0e2275917af1e3765" => :catalina
-    sha256 "93a530bf4844d0d3c653826359aa77bcb67691a0424b8ca1c6b20bec29733821" => :mojave
-    sha256 "af732c62d886aa4ec4c2e73287d06e2ed422736de17637395c0a44474942fca1" => :high_sierra
-    sha256 "2ed895d32e8a07f12b3583541f9fc8d59935e5aa767797f56711e67cdcfbd889" => :sierra
+    sha256 arm64_big_sur: "8c99de9859b3c8fd847d02a777f9f607942742c8e8c7ab11961c9f82cdd7521c"
+    sha256 big_sur:       "d8e5e9610c9209804710a07ad2accdd9e07df7c6ec0dbbc987193fb724801c0f"
+    sha256 catalina:      "2f15cd210e177b5d9156d3884f2b5fe735352820cc7b900a1c9dc951f56cb8e0"
+    sha256 mojave:        "ad16aaef6f362020519025f174bd72c4c74d007965209d9c89b55d0d989752cc"
   end
 
   depends_on "cmake" => :build
@@ -22,7 +21,7 @@ class RabbitmqC < Formula
   def install
     system "cmake", ".", *std_cmake_args, "-DBUILD_EXAMPLES=OFF",
                          "-DBUILD_TESTS=OFF", "-DBUILD_API_DOCS=OFF",
-                         "-DBUILD_TOOLS=ON"
+                         "-DBUILD_TOOLS=ON", "-DCMAKE_INSTALL_RPATH=#{opt_lib}"
     system "make", "install"
   end
 

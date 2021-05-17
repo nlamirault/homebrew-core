@@ -1,24 +1,23 @@
 class Nettle < Formula
   desc "Low-level cryptographic library"
   homepage "https://www.lysator.liu.se/~nisse/nettle/"
-  url "https://ftp.gnu.org/gnu/nettle/nettle-3.4.1.tar.gz"
-  mirror "https://ftpmirror.gnu.org/nettle/nettle-3.4.1.tar.gz"
-  sha256 "f941cf1535cd5d1819be5ccae5babef01f6db611f9b5a777bae9c7604b8a92ad"
+  url "https://ftp.gnu.org/gnu/nettle/nettle-3.7.2.tar.gz"
+  mirror "https://ftpmirror.gnu.org/nettle/nettle-3.7.2.tar.gz"
+  sha256 "8d2a604ef1cde4cd5fb77e422531ea25ad064679ff0adf956e78b3352e0ef162"
+  license any_of: ["GPL-2.0-or-later", "LGPL-3.0-or-later"]
 
   bottle do
-    cellar :any
-    sha256 "338da826ad5127a98f1658c01f2bd128aa9383b3581c9beebc0f0ebc88b0d089" => :catalina
-    sha256 "9e7f78a4cc96ca57f75ca1d37cc12c11655b7e0aa7109da4becd0408a1e2ed6b" => :mojave
-    sha256 "4327e8e4c4760653113f0bc4a7b0bada37b2d820f6c3ba759832e59ed553cb9a" => :high_sierra
-    sha256 "4624e3b0964d695408cf45330bab8cda2536002834f96202f7a37007407123fd" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "aa390782861378db29a3d19d8be98c291bedc32535c3dd35bc5e1ba91c35a170"
+    sha256 cellar: :any, big_sur:       "bbcea7ed54f806373b9689ee05379f509007c58aa737892a6bd77ccb0ee05f67"
+    sha256 cellar: :any, catalina:      "08a2b9568b211c2c8dbf2fb4d1acbb5ace419594f75bf76733b687c441b13a47"
+    sha256 cellar: :any, mojave:        "0dc3ca8dc38af69eee4afa0fd31f93970c23007e319a98cb2036b3cbb0b17cec"
   end
 
   depends_on "gmp"
 
-  def install
-    # macOS doesn't use .so libs. Emailed upstream 04/02/2016.
-    inreplace "testsuite/dlopen-test.c", "libnettle.so", "libnettle.dylib"
+  uses_from_macos "m4" => :build
 
+  def install
     # The LLVM shipped with Xcode/CLT 10+ compiles binaries/libraries with
     # ___chkstk_darwin, which upsets nettle's expected symbol check.
     # https://github.com/Homebrew/homebrew-core/issues/28817#issuecomment-396762855
@@ -28,9 +27,13 @@ class Nettle < Formula
                                           "get_pc_thunk|(_*chkstk_darwin)"
     end
 
+    args = []
+    args << "--build=aarch64-apple-darwin#{OS.kernel_version}" if Hardware::CPU.arm?
+
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
-                          "--enable-shared"
+                          "--enable-shared",
+                          *args
     system "make"
     system "make", "install"
     system "make", "check"

@@ -1,19 +1,21 @@
 class Entr < Formula
   desc "Run arbitrary commands when files change"
-  homepage "http://entrproject.org/"
-  url "http://entrproject.org/code/entr-4.3.tar.gz"
-  sha256 "b081c1dbdac7723e91f6d528a0d736f90cb2fb1458888aa3b446699d9d26235a"
+  homepage "https://eradman.com/entrproject/"
+  url "https://eradman.com/entrproject/code/entr-4.9.tar.gz"
+  sha256 "e256a4d2fbe46f6132460833ba447e65d7f35ba9d0b265e7c4150397cc4405a2"
+  license "ISC"
+  head "https://github.com/eradman/entr.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "c4b7c58cfb49d283b5e8abac6e42cadd35abbf839698a0768eb204fc93e7813e" => :catalina
-    sha256 "aff4134c32a0a79f5717f9fc874230d4b896036550bceeab29507a6bf96b060b" => :mojave
-    sha256 "0dc2105c02d0bd99bcb23e47ed0e59fe76781d230df9821fd5909ce949a2f075" => :high_sierra
+  livecheck do
+    url "https://eradman.com/entrproject/code/"
+    regex(/href=.*?entr[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  head do
-    url "https://bitbucket.org/eradman/entr", :using => :hg
-    depends_on "mercurial" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6ea2876fa3470d9959ab4da944f3ea50135f998531056a5254b66e5555435b77"
+    sha256 cellar: :any_skip_relocation, big_sur:       "2cd27734479f6797b4d935d434f795a9794acd6e6dab0f0215b4ac96384c75ae"
+    sha256 cellar: :any_skip_relocation, catalina:      "9e8c9239cf071087ff47cfcd1ab0a729a77e5a9e7284a038d1790a81eebd70a3"
+    sha256 cellar: :any_skip_relocation, mojave:        "810b1d21eef7e39c5194296c0717bdb200c2d5f1edf2c64d24093d4df95d4bf2"
   end
 
   def install
@@ -30,6 +32,6 @@ class Entr < Formula
       sleep 0.5
       touch testpath/"test.2"
     end
-    assert_equal "New File", pipe_output("#{bin}/entr -p -d echo 'New File'", testpath).strip
+    assert_equal "New File", pipe_output("#{bin}/entr -n -p -d echo 'New File'", testpath).strip
   end
 end

@@ -1,22 +1,17 @@
 class Libusbmuxd < Formula
   desc "USB multiplexor library for iOS devices"
   homepage "https://www.libimobiledevice.org/"
-  revision 1
-
-  stable do
-    url "https://github.com/libimobiledevice/libusbmuxd/archive/2.0.0.tar.gz"
-    sha256 "ecf287b9d5fa28645a6b5ed640b6bd174134227c4fd8fde28d0678df2be0e97a"
-  end
+  url "https://github.com/libimobiledevice/libusbmuxd/archive/2.0.2.tar.gz"
+  sha256 "8ae3e1d9340177f8f3a785be276435869363de79f491d05d8a84a59efc8a8fdc"
+  license "LGPL-2.1"
+  head "https://github.com/libimobiledevice/libusbmuxd.git"
 
   bottle do
-    cellar :any
-    sha256 "cd86a52e7d94295f6ddb4f61449f349f22e6ebe0dec876904a0bdde78869035b" => :catalina
-    sha256 "c296286ac58e0afbd167f37b7be5ced50c104252d69878e9a54f33268eb54a54" => :mojave
-    sha256 "c37185be694168115ef33c17794a3a00ef3e917ade673f0a6a7f39fb3a9dd5dd" => :high_sierra
-  end
-
-  head do
-    url "https://github.com/libimobiledevice/libusbmuxd.git"
+    sha256 cellar: :any, arm64_big_sur: "9cd9d1df802799e026f09775bbde2c4bf0557fb3e1f5919f14a5b0def0b0255e"
+    sha256 cellar: :any, big_sur:       "faf8346e0e4caa8ac7c4ac7e3b838693f847a88120cf477b8e8c82bd0a7628f6"
+    sha256 cellar: :any, catalina:      "72fcc67099f03a3d68faa131eaf464a431e5d5eaea0a5ddb9b8414c065f7ef73"
+    sha256 cellar: :any, mojave:        "132ee76aa823e51abb97c92c53ab8a30819720ced7020080f949cf4fd937f6ea"
+    sha256 cellar: :any, high_sierra:   "67c3d43cb2a1ebfd68fba1c9b51b419288fedefc93f101adeea1b5f6bdf1ad77"
   end
 
   depends_on "autoconf" => :build
@@ -35,6 +30,13 @@ class Libusbmuxd < Formula
   end
 
   test do
-    system bin/"iproxy"
+    source = free_port
+    dest = free_port
+    fork do
+      exec bin/"iproxy", "#{source}:#{dest}"
+    end
+
+    sleep(2)
+    system "nc", "-z", "localhost", source
   end
 end

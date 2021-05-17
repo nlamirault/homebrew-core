@@ -1,15 +1,20 @@
 class Pgroonga < Formula
   desc "PostgreSQL plugin to use Groonga as index"
   homepage "https://pgroonga.github.io/"
-  url "https://packages.groonga.org/source/pgroonga/pgroonga-2.2.1.tar.gz"
-  sha256 "68ddb538b14917f89fb6c71846ac736de2ebc7d799a56fb69a149bde671e2135"
+  url "https://packages.groonga.org/source/pgroonga/pgroonga-2.2.9.tar.gz"
+  sha256 "f65978fa843cb1a5fb82e72531b88fae481e428930163c06a281e02c0140e3b7"
+  license "PostgreSQL"
+
+  livecheck do
+    url "https://packages.groonga.org/source/pgroonga/"
+    regex(/href=.*?pgroonga[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "1c74234d2999c6183b96f8c89afdaf22737e5bdbcbb84ea1e03482000b909e2b" => :catalina
-    sha256 "15e1584a853f70a64ccb2e1285bd4bde7a8924e9c78b9c09eeb8401231a80bb1" => :mojave
-    sha256 "50df1b2525a3763cd493df1acd44df3faeeccb50d258cd2d0cbe6e70666e0c62" => :high_sierra
-    sha256 "ca843315151b2ab07b54e92f4f99cc2940beb7ef66c81993205988abbd7bf688" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "f84cd3fa23db438daef8669eee46b9db2c1745045ebdc06d979af0b8a4c9c52d"
+    sha256 cellar: :any, big_sur:       "af4e6e0a84229ec29bd1abd51ea0645b8d3ec78016645a80ca19cd45fcb7b6c1"
+    sha256 cellar: :any, catalina:      "9724e03d9f2f70d5c8b12ea9abf53d7031db907001a355228453437e8dbecd02"
+    sha256 cellar: :any, mojave:        "3462b4008436bc2d05602cdf4cac125cfc78dbb7405110cf05f780c249fe4b19"
   end
 
   depends_on "pkg-config" => :build
@@ -23,22 +28,5 @@ class Pgroonga < Formula
 
     lib.install Dir["stage/**/lib/*"]
     (share/"postgresql/extension").install Dir["stage/**/share/postgresql/extension/*"]
-  end
-
-  test do
-    pg_bin = Formula["postgresql"].opt_bin
-    pg_port = "55561"
-    system "#{pg_bin}/initdb", testpath/"test"
-    pid = fork { exec "#{pg_bin}/postgres", "-D", testpath/"test", "-p", pg_port }
-
-    begin
-      sleep 2
-      system "#{pg_bin}/createdb", "-p", pg_port
-      system "#{pg_bin}/psql", "-p", pg_port, "--command", "CREATE DATABASE test;"
-      system "#{pg_bin}/psql", "-p", pg_port, "-d", "test", "--command", "CREATE EXTENSION pgroonga;"
-    ensure
-      Process.kill 9, pid
-      Process.wait pid
-    end
   end
 end

@@ -1,13 +1,23 @@
 class Druid < Formula
   desc "High-performance, column-oriented, distributed data store"
   homepage "https://druid.apache.org/"
-  url "http://static.druid.io/artifacts/releases/druid-0.12.3-bin.tar.gz"
-  sha256 "807581d54fa4c5a90eec2a230e2a7fc4c6daf18eb8136009bf36a775d793d6f6"
+  url "https://www.apache.org/dyn/closer.lua?path=druid/0.21.0/apache-druid-0.21.0-bin.tar.gz"
+  mirror "https://archive.apache.org/dist/druid/0.21.0/apache-druid-0.21.0-bin.tar.gz"
+  sha256 "3e886e51834b03876ad088a5212747ed7f671d50f651413dd9cee11bd4129a69"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url "https://druid.apache.org/downloads.html"
+    regex(/href=.*?druid[._-]v?(\d+(?:\.\d+)+)-bin\.t/i)
+  end
 
-  depends_on :java => "1.8"
-  depends_on "zookeeper"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "5cbde4502719b8fbd2adc70388b355c560dde2921a512d507df0f7f0068ec6b7"
+  end
+
+  depends_on "zookeeper" => :test
+  depends_on arch: :x86_64
+  depends_on "openjdk@8"
 
   resource "mysql-metadata-storage" do
     url "http://static.druid.io/artifacts/releases/mysql-metadata-storage-0.12.3.tar.gz"
@@ -40,7 +50,7 @@ class Druid < Formula
     end
 
     bin.install Dir["#{libexec}/bin/*.sh"]
-    bin.env_script_all_files(libexec/"bin", Language::Java.java_home_env("1.8"))
+    bin.env_script_all_files libexec/"bin", Language::Java.overridable_java_home_env("1.8")
 
     Pathname.glob("#{bin}/*.sh") do |file|
       mv file, bin/"druid-#{file.basename}"
@@ -61,15 +71,17 @@ class Druid < Formula
   end
 
   test do
-    ENV["DRUID_CONF_DIR"] = libexec/"conf-quickstart/druid"
+    ENV["DRUID_CONF_DIR"] = libexec/"conf/druid/single-server/nano-quickstart"
     ENV["DRUID_LOG_DIR"] = testpath
     ENV["DRUID_PID_DIR"] = testpath
+    ENV["ZOO_LOG_DIR"] = testpath
 
+    system Formula["zookeeper"].opt_bin/"zkServer", "start"
     begin
       pid = fork { exec bin/"druid-broker.sh", "start" }
-      sleep 30
+      sleep 40
       output = shell_output("curl -s http://localhost:8082/status")
-      assert_match /version/m, output
+      assert_match "version", output
     ensure
       system bin/"druid-broker.sh", "stop"
       Process.wait pid

@@ -1,63 +1,65 @@
 class Monero < Formula
-  desc "Official monero wallet and cpu miner"
-  homepage "https://getmonero.org/"
+  desc "Official Monero wallet and CPU miner"
+  homepage "https://www.getmonero.org/"
   url "https://github.com/monero-project/monero.git",
-      :tag      => "v0.15.0.1",
-      :revision => "6def88ad405b39f632a91afa3aacbb92ecc63c1f"
+      tag:      "v0.17.2.0",
+      revision: "f6e63ef260e795aacd408c28008398785b84103a"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "a576ff3d3106ae6ee6b94e1156a3afa44bb3fb44d6f1b4694fc3df44dd4b96a4" => :catalina
-    sha256 "d63070938737aee203b744397100480464b5c59cff8b7ab95bc8700e9d0d9255" => :mojave
-    sha256 "4a8b4c93004a16a089e7f7faf723877573b6ad9518d55a911231bf88bc387dde" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "97a823dfc409483824c3f97a1b121e3bb81cf3bcc7be8ec5a6720ac84b21ca8e"
+    sha256 cellar: :any, big_sur:       "db83692ce0f80aa34e11e5452d1a48ec99a57312ecff37938a82035bad417292"
+    sha256 cellar: :any, catalina:      "64d703fda62a0a04ad4010066cd42106d052594113881784b4ff6620b94ce261"
+    sha256 cellar: :any, mojave:        "644dc68d0af5481c1cbe9badcfef3628c62f321ece4b8ce194a57c228cebe400"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "boost"
+  depends_on "hidapi"
   depends_on "libsodium"
   depends_on "openssl@1.1"
+  depends_on "protobuf"
   depends_on "readline"
   depends_on "unbound"
   depends_on "zeromq"
 
-  resource "cppzmq" do
-    url "https://github.com/zeromq/cppzmq/archive/v4.3.0.tar.gz"
-    sha256 "27d1f56406ba94ee779e639203218820975cf68174f92fbeae0f645df0fcada4"
-  end
+  conflicts_with "wownero", because: "both install a wallet2_api.h header"
 
   def install
-    (buildpath/"cppzmq").install resource("cppzmq")
-    system "cmake", ".", "-DZMQ_INCLUDE_PATH=#{buildpath}/cppzmq",
-                         "-DReadline_ROOT_DIR=#{Formula["readline"].opt_prefix}",
-                         *std_cmake_args
+    system "cmake", ".", *std_cmake_args
     system "make", "install"
 
-    # Avoid conflicting with miniupnpc
-    # Reported upstream 25 May 2018 https://github.com/monero-project/monero/issues/3862
+    # Fix conflict with miniupnpc.
+    # This has been reported at https://github.com/monero-project/monero/issues/3862
     rm lib/"libminiupnpc.a"
-    rm_rf include/"miniupnpc"
   end
 
-  plist_options :manual => "monerod"
+  plist_options manual: "monerod"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/monerod</string>
-        <string>--non-interactive</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/monerod</string>
+          <string>--non-interactive</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do

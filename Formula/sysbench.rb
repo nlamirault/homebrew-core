@@ -1,15 +1,15 @@
 class Sysbench < Formula
   desc "System performance benchmark tool"
   homepage "https://github.com/akopytov/sysbench"
-  url "https://github.com/akopytov/sysbench/archive/1.0.18.tar.gz"
-  sha256 "c679b285e633c819d637bdafaeacc1bec13f37da5b3357c7e17d97a71bf28cb1"
-  revision 1
+  url "https://github.com/akopytov/sysbench/archive/1.0.20.tar.gz"
+  sha256 "e8ee79b1f399b2d167e6a90de52ccc90e52408f7ade1b9b7135727efe181347f"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "a720824e2b028688b66f6f364d6e45754e3544001c5ab5427d9c0fc0c5e7153f" => :catalina
-    sha256 "8343774a73daa156e839c23c521f5ddce1c4d12c7106028c6b78e3b10193e112" => :mojave
-    sha256 "6a24f2724fd649fc96a0f6829620a46b71d8edbff172fc17d163cbaaf728a3ad" => :high_sierra
+    sha256 cellar: :any, big_sur:     "81f4b5aa43833246f85567c964707b1741b85439c7f85e41e9d7bad7b922f7b6"
+    sha256 cellar: :any, catalina:    "2ca0e854823e63ecf84b27d81d0ea722aeae784fed39b436fed738fcd4450489"
+    sha256 cellar: :any, mojave:      "ec55acf85be8a3cfbd57a72f1d67aad2104e545ec32464010d673c205075c809"
+    sha256 cellar: :any, high_sierra: "84363a4b7267f936a6e168fb4ed30fa21970ff1483bb81a5fba2bbe25d611cfc"
   end
 
   depends_on "autoconf" => :build
@@ -18,6 +18,8 @@ class Sysbench < Formula
   depends_on "pkg-config" => :build
   depends_on "mysql-client"
   depends_on "openssl@1.1"
+
+  uses_from_macos "vim" # needed for xxd
 
   def install
     system "./autogen.sh"

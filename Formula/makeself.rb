@@ -1,13 +1,18 @@
 class Makeself < Formula
-  desc "Make self-extractable archives on UNIX"
+  desc "Generates a self-extracting compressed tar archive"
   homepage "http://www.megastep.org/makeself/"
-  url "https://github.com/megastep/makeself/archive/release-2.4.0.tar.gz"
-  sha256 "76a8c3f3fad1b55c39ba2904a19e74962151f9481df03091d4e54938bdd13f50"
+  url "https://github.com/megastep/makeself/archive/release-2.4.3.tar.gz"
+  sha256 "b4c81c3d0a7c81459459319e9fc75320e057ea908430aa8a020be1993d6b74c8"
+  license "GPL-2.0-or-later"
   head "https://github.com/megastep/makeself.git"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "620fe1bac044be0d0cc0c37bd3683151f90ce479fcd2736bf27fcf59b0da2edc"
+  end
 
   def install
+    # Replace `/usr/local` references to make bottles uniform
+    inreplace ["makeself-header.sh", "makeself.sh"], "/usr/local", HOMEBREW_PREFIX
     libexec.install "makeself-header.sh"
     # install makeself-header.sh to libexec so change its location in makeself.sh
     inreplace "makeself.sh", '`dirname "$0"`', libexec

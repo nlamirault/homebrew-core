@@ -1,21 +1,24 @@
 class Luaradio < Formula
   desc "Lightweight, embeddable flow graph signal processing framework for SDR"
-  homepage "http://luaradio.io/"
-  url "https://github.com/vsergeev/luaradio/archive/v0.5.1.tar.gz"
-  sha256 "723dce178594a6a9a64de6ba7929f04d5fd08d0c9ed57650b22993afdb1ebdf3"
+  homepage "https://luaradio.io/"
+  url "https://github.com/vsergeev/luaradio/archive/v0.9.1.tar.gz"
+  sha256 "25150fa6b2cfd885d59453a9c4599811573176451c659278c12d50fece69f7f3"
+  license "MIT"
+  revision 1
   head "https://github.com/vsergeev/luaradio.git"
 
   bottle do
-    cellar :any
     rebuild 1
-    sha256 "aea4720401562ca9bed2ec71fa24707fe20b2fa392aab8c7c19c2f563443aff7" => :catalina
-    sha256 "ab2033c7ec9b302782cd4736a7efaf63abb808fc26d56a32d8a68df0b124e309" => :mojave
-    sha256 "4417816f9ee6a53057b81862820dbd15833d455ef5be31908a1f989131e751ac" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "7e52830ddd8a71879d33c359971b828bc4802a10f4b8a8f176748406105d1fdf"
+    sha256 cellar: :any, big_sur:       "7b03a5efbefa3aacf0d70d0c33004eef5afdcb4d5535be67d924149010fd9efa"
+    sha256 cellar: :any, catalina:      "d262ff65dc4fde0c784ad364812708f845dfd5543cf893e6e616595360071046"
+    sha256 cellar: :any, mojave:        "16197ba0307226d4d0dd4dbba8fc8d2a1d5a2dfe0d1ef1a8d69788eea6ddf352"
   end
 
   depends_on "pkg-config" => :build
   depends_on "fftw"
-  depends_on "luajit"
+  depends_on "liquid-dsp"
+  depends_on "luajit-openresty"
 
   def install
     cd "embed" do
@@ -28,6 +31,13 @@ class Luaradio < Formula
       end
       system "make", "install", "PREFIX=#{prefix}"
     end
+
+    env = {
+      PATH:      "#{Formula["luajit-openresty"].opt_bin}:$PATH",
+      LUA_CPATH: "#{lib}/lua/5.1/?.so${LUA_CPATH:+;$LUA_CPATH};;",
+    }
+
+    bin.env_script_all_files libexec/"bin", env
   end
 
   test do

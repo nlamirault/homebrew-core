@@ -1,29 +1,44 @@
 class Logstash < Formula
   desc "Tool for managing events and logs"
   homepage "https://www.elastic.co/products/logstash"
-  url "https://artifacts.elastic.co/downloads/logstash/logstash-oss-7.4.2.tar.gz"
-  sha256 "107ac2fdf7f836a54d4d6416f181ce99859aae30efa216255d5553e543c684da"
+  url "https://github.com/elastic/logstash/archive/v7.12.1.tar.gz"
+  sha256 "edb2b206b2a95c19f4f87480bf4852bb71507c94777a46735cec9e2d4f0640f2"
+  license "Apache-2.0"
+  version_scheme 1
   head "https://github.com/elastic/logstash.git"
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
-  depends_on :java => "1.8"
+  bottle do
+    sha256 cellar: :any, big_sur:  "8e66b057cce7e28c43d378c3eb2878b7a477670e8ad4a5d0710ffe2d96bb1bd7"
+    sha256 cellar: :any, catalina: "9ff3b8f78cc5c640ae4c5322e06b63bf8b124001de04404867fb3d923c8479e3"
+    sha256 cellar: :any, mojave:   "6d4cfef67fcc57df48bf8f51e97c834e79c1b98d9002c68fd497bb590339082c"
+  end
+
+  depends_on "openjdk@11"
+
+  uses_from_macos "ruby" => :build
 
   def install
-    if build.head?
-      # Build the package from source
-      system "rake", "artifact:tar"
-      # Extract the package to the current directory
-      mkdir "tar"
-      system "tar", "--strip-components=1", "-xf", Dir["build/logstash-*.tar.gz"].first, "-C", "tar"
-      cd "tar"
-    end
+    # remove non open source files
+    rm_rf "x-pack"
+    ENV["OSS"] = "true"
+
+    # Build the package from source
+    system "rake", "artifact:no_bundle_jdk_tar"
+    # Extract the package to the current directory
+    mkdir "tar"
+    system "tar", "--strip-components=1", "-xf", Dir["build/logstash-*.tar.gz"].first, "-C", "tar"
+    cd "tar"
 
     inreplace "bin/logstash",
-              %r{^\. "\$\(cd `dirname \${SOURCEPATH}`\/\.\.; pwd\)\/bin\/logstash\.lib\.sh\"},
+              %r{^\. "\$\(cd `dirname \$\{SOURCEPATH\}`/\.\.; pwd\)/bin/logstash\.lib\.sh"},
               ". #{libexec}/bin/logstash.lib.sh"
     inreplace "bin/logstash-plugin",
-              %r{^\. "\$\(cd `dirname \$0`\/\.\.; pwd\)\/bin\/logstash\.lib\.sh\"},
+              %r{^\. "\$\(cd `dirname \$0`/\.\.; pwd\)/bin/logstash\.lib\.sh"},
               ". #{libexec}/bin/logstash.lib.sh"
     inreplace "bin/logstash.lib.sh",
               /^LOGSTASH_HOME=.*$/,
@@ -36,19 +51,20 @@ class Logstash < Formula
     (libexec/"config").rmtree
 
     bin.install libexec/"bin/logstash", libexec/"bin/logstash-plugin"
-    bin.env_script_all_files(libexec/"bin", Language::Java.java_home_env("1.8"))
+    bin.env_script_all_files(libexec/"bin", Language::Java.overridable_java_home_env("11"))
   end
 
   def post_install
     ln_s etc/"logstash", libexec/"config"
   end
 
-  def caveats; <<~EOS
-    Configuration files are located in #{etc}/logstash/
-  EOS
+  def caveats
+    <<~EOS
+      Configuration files are located in #{etc}/logstash/
+    EOS
   end
 
-  plist_options :manual => "logstash"
+  plist_options manual: "logstash"
 
   def plist
     <<~EOS
@@ -81,7 +97,6 @@ class Logstash < Formula
   end
 
   test do
-    assert_includes(stable.url, "-oss-")
     # workaround https://github.com/elastic/logstash/issues/6378
     (testpath/"config").mkpath
     ["jvm.options", "log4j2.properties", "startup.options"].each do |f|

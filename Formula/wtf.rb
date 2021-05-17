@@ -1,8 +1,14 @@
 class Wtf < Formula
   desc "Translate common Internet acronyms"
   homepage "https://sourceforge.net/projects/bsdwtf/"
-  url "https://downloads.sourceforge.net/project/bsdwtf/wtf-20191111.tar.gz"
-  sha256 "60765a2a901361d1c2d58e0c97b2a6a20df8b594fab53c341e2e7348d135f3dc"
+  url "https://downloads.sourceforge.net/project/bsdwtf/wtf-20210416.tar.gz"
+  sha256 "af3c5c92f4f76e14fcf2a821e520af09043781b8f17fc8a6e8d115fc9f18e1b7"
+  license :public_domain
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/wtf[._-]v?(\d{6,8})\.t}i)
+  end
 
   bottle :unneeded
 

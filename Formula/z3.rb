@@ -1,27 +1,36 @@
 class Z3 < Formula
   desc "High-performance theorem prover"
   homepage "https://github.com/Z3Prover/z3"
-  url "https://github.com/Z3Prover/z3/archive/z3-4.8.6.tar.gz"
-  sha256 "37922fa5085170cad6504498d9758fb63c61d5cb5b68689c11a6c5e84f0311b3"
+  url "https://github.com/Z3Prover/z3/archive/z3-4.8.10.tar.gz"
+  sha256 "12cce6392b613d3133909ce7f93985d2470f0d00138837de06cf7eb2992886b4"
+  license "MIT"
   head "https://github.com/Z3Prover/z3.git"
 
-  bottle do
-    cellar :any
-    sha256 "77e5760f19f5acdf3b73adebdf1e93ad00d5bc43d695a0565728ca8e6aa02b70" => :catalina
-    sha256 "0c71a481c7232c4c93e4a28e85271959a7ec2fe4ff88f4245936bdf5dff5c389" => :mojave
-    sha256 "5999876e4ae35a590879c8f7caeace02aacc4fe77eb58819443dd2fb05aff495" => :high_sierra
-    sha256 "e08003ed5ac98409f7d9c0f6fbe2bd483d202079db5233ddbca53e3182a6108a" => :sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/z3[._-]v?(\d+(?:\.\d+)+)["' >]}i)
   end
 
-  depends_on "python"
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "05119bd5f8a125823a9809ec6cc5bed54b426a7778832f3022b91edbde24b2d6"
+    sha256 cellar: :any, big_sur:       "2b644db19e5e4b40ab46040c845141cf484ed7a61a4405e26a2e7ee849e7fc8e"
+    sha256 cellar: :any, catalina:      "97099b1c125112e2a7b783dc7a568e34e1b43b8bce16fc6bb5697c7fd69da514"
+    sha256 cellar: :any, mojave:        "c16751c07a66eb9aaeaa0d2aa1b59182ac3ee37dfcd475286260637d69260e42"
+  end
+
+  # Has Python bindings but are supplementary to the main library
+  # which does not need Python.
+  depends_on "python@3.9" => :build
 
   def install
-    xy = Language::Python.major_minor_version "python3"
-    system "python3", "scripts/mk_make.py",
-                      "--prefix=#{prefix}",
-                      "--python",
-                      "--pypkgdir=#{lib}/python#{xy}/site-packages",
-                      "--staticlib"
+    python3 = Formula["python@3.9"].opt_bin/"python3"
+    xy = Language::Python.major_minor_version python3
+    system python3, "scripts/mk_make.py",
+                     "--prefix=#{prefix}",
+                     "--python",
+                     "--pypkgdir=#{lib}/python#{xy}/site-packages",
+                     "--staticlib"
 
     cd "build" do
       system "make"

@@ -1,63 +1,56 @@
 class NatsServer < Formula
   desc "Lightweight cloud messaging system"
   homepage "https://nats.io"
-  url "https://github.com/nats-io/nats-server/archive/v2.1.2.tar.gz"
-  sha256 "2fdbda70191ba02f3e065b0d2d503236865c60e88fa4a7c7e0eae691e7e32b2d"
+  url "https://github.com/nats-io/nats-server/archive/v2.2.4.tar.gz"
+  sha256 "584432a18c3cff17ce46bdcb226e818228ed8c3ac6aa88ec641915d45600d7e8"
+  license "Apache-2.0"
   head "https://github.com/nats-io/nats-server.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "4edb45f19824f760294780d6b365916ee23c514acfc183d3fe9d52fbb4a189a9" => :catalina
-    sha256 "aa5771424fa936d191a62e0e7cdd4c3aa2bfe2ac6cd3869419015ae3808bd426" => :mojave
-    sha256 "48c033283b086a6540f0d26b4e0782de589b1b1e481968bdc6f96b86b3549f19" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "fd3e4ee46b9639189aeba70d0aa787a7e93b945aeec4ed3de03dea8d2d5edfdd"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1d7fd052874f3d6dc1f24bfb8cd9e4d8168b5b8e99a8fba9c5dd21aae65ee008"
+    sha256 cellar: :any_skip_relocation, catalina:      "c8498cce1e3816b1b9912f98eb2068c8f63527e41068fefa4c353ceeaff687eb"
+    sha256 cellar: :any_skip_relocation, mojave:        "bac6e1b7b203755206b0f5092a6e45a5e8b8665a161facfebc9a6d33d9919db1"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["GO111MODULE"] = "off"
-    mkdir_p "src/github.com/nats-io"
-    ln_s buildpath, "src/github.com/nats-io/nats-server"
-    buildfile = buildpath/"src/github.com/nats-io/nats-server/main.go"
-    system "go", "build", "-v", "-o", bin/"nats-server", buildfile
+    system "go", "build", "-ldflags", "-s -w", *std_go_args
   end
 
-  plist_options :manual => "nats-server"
+  plist_options manual: "nats-server"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/nats-server</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/nats-server</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
-    pid = fork do
+    port = free_port
+    fork do
       exec bin/"nats-server",
-           "--port=8085",
+           "--port=#{port}",
            "--pid=#{testpath}/pid",
            "--log=#{testpath}/log"
     end
     sleep 3
 
-    begin
-      assert_match version.to_s, shell_output("curl localhost:8085")
-      assert_predicate testpath/"log", :exist?
-    ensure
-      Process.kill "SIGINT", pid
-      Process.wait pid
-    end
+    assert_match version.to_s, shell_output("curl localhost:#{port}")
+    assert_predicate testpath/"log", :exist?
   end
 end

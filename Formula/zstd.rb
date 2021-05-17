@@ -1,25 +1,33 @@
 class Zstd < Formula
   desc "Zstandard is a real-time compression algorithm"
   homepage "https://facebook.github.io/zstd/"
-  url "https://github.com/facebook/zstd/archive/v1.4.4.tar.gz"
-  sha256 "a364f5162c7d1a455cc915e8e3cf5f4bd8b75d09bc0f53965b0c9ca1383c52c8"
+  url "https://github.com/facebook/zstd/archive/v1.4.9.tar.gz"
+  sha256 "acf714d98e3db7b876e5b540cbf6dee298f60eb3c0723104f6d3f065cd60d6a8"
+  license "BSD-3-Clause"
+  revision 1
+  head "https://github.com/facebook/zstd.git", branch: "dev"
 
   bottle do
-    cellar :any
-    sha256 "31e79477416c7e8d44ca7e2339167a1892daea4885b95503b7bc316cae5159af" => :catalina
-    sha256 "8533ca2bb803f88c0bddb7131de1fff6fe8f0c6278982ef7cb0332631010291c" => :mojave
-    sha256 "63fd4c9d7326960a5c395da10b323a4d285cce7a7eb6a89e7e47b591a7fb72d8" => :high_sierra
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "3d51ef9a3f13e82d4dc2e3796c3f02ee32593686c87498f0ba49302b38fb5f7a"
+    sha256 cellar: :any, big_sur:       "84b118224c8da97b293087196e5dabcefceaede9d0c4c60dd05bcb103d2668a6"
+    sha256 cellar: :any, catalina:      "3bdec91921f43b57d2afb4fd61641dd912330c010b2c1979c51602cecfe66f1a"
+    sha256 cellar: :any, mojave:        "29f6070e68f504cda74fb368ca267cf4031203371fb74cd4bdb9547229fec849"
   end
 
   depends_on "cmake" => :build
 
-  def install
-    system "make", "install", "PREFIX=#{prefix}/"
+  uses_from_macos "zlib"
 
-    # Build parallel version
-    system "make", "-C", "contrib/pzstd", "googletest"
-    system "make", "-C", "contrib/pzstd", "PREFIX=#{prefix}"
-    bin.install "contrib/pzstd/pzstd"
+  def install
+    cd "build/cmake" do
+      system "cmake", "-S", ".", "-B", "builddir",
+                      "-DZSTD_BUILD_CONTRIB=ON",
+                      "-DCMAKE_INSTALL_RPATH=#{rpath}",
+                      *std_cmake_args
+      system "cmake", "--build", "builddir"
+      system "cmake", "--install", "builddir"
+    end
   end
 
   test do

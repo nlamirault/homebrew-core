@@ -1,13 +1,22 @@
 class Sbt < Formula
   desc "Build tool for Scala projects"
   homepage "https://www.scala-sbt.org/"
-  url "https://github.com/sbt/sbt/releases/download/v1.3.3/sbt-1.3.3.tgz"
-  mirror "https://sbt-downloads.cdnedge.bluemix.net/releases/v1.3.3/sbt-1.3.3.tgz"
-  sha256 "fe64a24ecd26ae02ac455336f664bbd7db6a040144b3106f1c45ebd42e8a476c"
+  url "https://github.com/sbt/sbt/releases/download/v1.5.2/sbt-1.5.2.tgz"
+  mirror "https://sbt-downloads.cdnedge.bluemix.net/releases/v1.5.2/sbt-1.5.2.tgz"
+  sha256 "9d01f7eb1a3830190d53ed4d8b8b9a6380f013ad30573a04e330d1de42ff0212"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
-  depends_on :java => "1.8+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "97d2ea0187ad1c17d6c6e0978b9deb31787e71bb391dc8b60ec4e487a2faf774"
+  end
+
+  depends_on arch: :x86_64
+  depends_on "openjdk"
 
   def install
     inreplace "bin/sbt" do |s|
@@ -15,28 +24,26 @@ class Sbt < Formula
       s.gsub! "/etc/sbt/sbtopts", "#{etc}/sbtopts"
     end
 
-    libexec.install "bin", "lib"
+    libexec.install "bin"
     etc.install "conf/sbtopts"
 
-    (bin/"sbt").write <<~EOS
-      #!/bin/sh
-      if [ -f "$HOME/.sbtconfig" ]; then
-        echo "Use of ~/.sbtconfig is deprecated, please migrate global settings to #{etc}/sbtopts" >&2
-        . "$HOME/.sbtconfig"
-      fi
-      exec "#{libexec}/bin/sbt" "$@"
-    EOS
+    (bin/"sbt").write_env_script libexec/"bin/sbt", Language::Java.overridable_java_home_env
+    (bin/"sbtn").write_env_script libexec/"bin/sbtn-x86_64-apple-darwin", Language::Java.overridable_java_home_env
   end
 
-  def caveats;  <<~EOS
-    You can use $SBT_OPTS to pass additional JVM options to sbt.
-    Project specific options should be placed in .sbtopts in the root of your project.
-    Global settings should be placed in #{etc}/sbtopts
-  EOS
+  def caveats
+    <<~EOS
+      You can use $SBT_OPTS to pass additional JVM options to sbt.
+      Project specific options should be placed in .sbtopts in the root of your project.
+      Global settings should be placed in #{etc}/sbtopts
+    EOS
   end
 
   test do
     ENV.append "_JAVA_OPTIONS", "-Dsbt.log.noformat=true"
-    assert_match "[info] #{version}", shell_output("#{bin}/sbt sbtVersion")
+    system("#{bin}/sbt", "--sbt-create", "about")
+    assert_match version.to_s, shell_output("#{bin}/sbt sbtVersion")
+    system "#{bin}/sbtn", "about"
+    system "#{bin}/sbtn", "shutdown"
   end
 end

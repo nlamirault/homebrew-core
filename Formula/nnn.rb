@@ -1,18 +1,22 @@
 class Nnn < Formula
   desc "Tiny, lightning fast, feature-packed file manager"
   homepage "https://github.com/jarun/nnn"
-  url "https://github.com/jarun/nnn/archive/v2.7.tar.gz"
-  sha256 "0592c7cbcf2cf66cacac49e9204636480820b1bc74e4187dd7ee06945a6d07c5"
+  url "https://github.com/jarun/nnn/archive/v4.0.tar.gz"
+  sha256 "a219ec8fad3dd0512aadae5840176f3265188c4c22da3b17b133bac602b40754"
+  license "BSD-2-Clause"
   head "https://github.com/jarun/nnn.git"
 
   bottle do
-    cellar :any
-    sha256 "cf5f8858f95a2b09ead189bf89989a86e4f320a3d1892caf15cb98fd253d0ed4" => :catalina
-    sha256 "312a3d50d38eda061638ea7e6b5c82f40e9f462eed882316c18bf20503c9bdae" => :mojave
-    sha256 "f819fda84d7ba01e82d64549bd8846eb11299d63edc5a4a7bcbf2703a928ad7f" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "3121884b9703f5bc511499904d0cd65c941ce22cb80eeb0a0c650e75de0788e3"
+    sha256 cellar: :any, big_sur:       "e6ab60e20d2ec6e9ce86c7774843141e19ac3f71fdb1022b9e8a9206ee2a8f3a"
+    sha256 cellar: :any, catalina:      "abd54ea24cb7ed46303b925f22466592c0ceaffbe8b8a8ec67ac6421c05bf64a"
+    sha256 cellar: :any, mojave:        "16a859bc4fafbf733092be7c8b03a738f165b358f87b1738dee7b349e2e1c47a"
   end
 
+  depends_on "gnu-sed"
   depends_on "readline"
+
+  uses_from_macos "ncurses"
 
   def install
     system "make", "install", "PREFIX=#{prefix}"
@@ -23,12 +27,21 @@ class Nnn < Formula
   end
 
   test do
+    on_linux do
+      # Test fails on CI: Input/output error @ io_fread - /dev/pts/0
+      # Fixing it involves pty/ruby voodoo, which is not worth spending time on
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
     # Testing this curses app requires a pty
     require "pty"
 
-    PTY.spawn(bin/"nnn") do |r, w, _pid|
-      w.write "q"
-      assert_match testpath.realpath.to_s, r.read
+    (testpath/"testdir").mkdir
+    cd testpath/"testdir" do
+      PTY.spawn(bin/"nnn") do |r, w, _pid|
+        w.write "q"
+        assert_match "~/testdir", r.read
+      end
     end
   end
 end

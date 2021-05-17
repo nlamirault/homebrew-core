@@ -2,29 +2,34 @@ class Inlets < Formula
   desc "Expose your local endpoints to the Internet"
   homepage "https://github.com/inlets/inlets"
   url "https://github.com/inlets/inlets.git",
-      :tag      => "2.6.1",
-      :revision => "5a1abcf24dcd30dc4a251902aa6cc7cb981ef0ae"
+      tag:      "3.0.1",
+      revision: "dbccc1ee8edfa0a06e4f7b258bbee4a959bc18af"
+  license "MIT"
+  head "https://github.com/inlets/inlets.git"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ab879c3612195a1229a424c44fbc238239058b475da8795d618fce8176874bae" => :catalina
-    sha256 "1f4fe93d4582e86f348ab9e1b52ed9fa90f799d73ae90e7bf79ea30d7617cd0c" => :mojave
-    sha256 "0550e3d07c29db12fcc3de100273c582bb2cd7fe0f2e9b665021fa9e7572bdbe" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "49385530d15aed2d23ef0aed4f5f6b46cc6e6c49b0936a2b9995d95115cf88b8"
+    sha256 cellar: :any_skip_relocation, big_sur:       "dd817356a0bccef76ee190e3ec5bd1a99965929b0e427697c8df0a4db088ab34"
+    sha256 cellar: :any_skip_relocation, catalina:      "ae0b7a7acdf69fce8d9305cbd125083aff5f98e7ec0d1bdcf96aa26a4319fca1"
+    sha256 cellar: :any_skip_relocation, mojave:        "1922d778ad53108052d204fe06122e7402ee5a28612c2e97f3ff78075b25cbae"
   end
 
   depends_on "go" => :build
 
+  uses_from_macos "ruby" => :test
+
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/inlets/inlets").install buildpath.children
-    cd "src/github.com/inlets/inlets" do
-      commit = Utils.popen_read("git", "rev-parse", "HEAD").chomp
-      system "go", "build", "-ldflags",
-             "-s -w -X main.GitCommit=#{commit} -X main.Version=#{version}",
-             "-a",
-             "-installsuffix", "cgo", "-o", bin/"inlets"
-      prefix.install_metafiles
-    end
+    ldflags = %W[
+      -s -w
+      -X main.GitCommit=#{Utils.git_head}
+      -X main.Version=#{version}
+    ]
+    system "go", "build", *std_go_args, "-ldflags", ldflags.join(" "), "-a", "-installsuffix", "cgo"
   end
 
   def cleanup(name, pid)
@@ -33,47 +38,33 @@ class Inlets < Formula
     Process.wait(pid)
   end
 
-  MOCK_RESPONSE = "INLETS OK".freeze
-  SECRET_TOKEN = "itsasecret-sssshhhhh".freeze
-
   test do
-    upstream_server = TCPServer.new(0)
-    upstream_port = upstream_server.addr[1]
-    remote_server = TCPServer.new(0)
-    remote_port = remote_server.addr[1]
-    upstream_server.close
-    remote_server.close
-
-    puts "Starting mock server on: localhost:#{upstream_port}"
+    upstream_port = free_port
+    remote_port = free_port
+    mock_response = "INLETS OK".freeze
+    secret_token = "itsasecret-sssshhhhh".freeze
 
     (testpath/"mock_upstream_server.rb").write <<~EOS
       require 'socket'
-
       server = TCPServer.new('localhost', #{upstream_port})
-
       loop do
         socket = server.accept
         request = socket.gets
         STDERR.puts request
-
         response = "OK\\n"
         shutdown = false
-
         if request.include? "inlets-test"
-          response = "#{MOCK_RESPONSE}\\n"
+          response = "#{mock_response}\\n"
           shutdown = true
         end
-
         socket.print "HTTP/1.1 200 OK\\r\\n" +
                     "Host: localhost:#{upstream_port}\\r\\n" +
                     "Content-Type: text/plain\\r\\n" +
                     "Content-Length: \#\{response.bytesize\}\\r\\n" +
                     "Connection: close\\r\\n"
-
         socket.print "\\r\\n"
         socket.print response
         socket.close
-
         if shutdown
           puts "Exiting test server"
           exit 0
@@ -82,45 +73,38 @@ class Inlets < Formula
     EOS
 
     mock_upstream_server_pid = fork do
-      exec "ruby mock_upstream_server.rb"
+      on_macos do
+        exec "ruby mock_upstream_server.rb"
+      end
+      on_linux do
+        exec "#{Formula["ruby"].opt_bin}/ruby mock_upstream_server.rb"
+      end
     end
 
     begin
-      require "uri"
-      require "net/http"
-
-      stable_resource = stable.instance_variable_get(:@resource)
-      commit = stable_resource.instance_variable_get(:@specs)[:revision]
-
       # Basic --version test
+      commit_regex = /[a-f0-9]{40}/
       inlets_version = shell_output("#{bin}/inlets version")
-      assert_match /\s#{commit}$/, inlets_version
-      assert_match /\s#{version}$/, inlets_version
+      assert_match commit_regex, inlets_version
+      assert_match version.to_s, inlets_version
 
       # Client/Server e2e test
       # This test involves establishing a client-server inlets tunnel on the
       # remote_port, running a mock server on the upstream_port and then
       # testing that we can hit the mock server upstream_port via the tunnel remote_port
-      puts "Waiting for mock server"
-      sleep 3
+      sleep 3 # Waiting for mock server
       server_pid = fork do
-        puts "Starting inlets server with port #{remote_port}"
-        exec "#{bin}/inlets server --port #{remote_port} --token #{SECRET_TOKEN}"
+        exec "#{bin}/inlets server --port #{remote_port} --token #{secret_token}"
       end
 
       client_pid = fork do
-        puts "Starting inlets client with remote localhost:#{remote_port}, upstream localhost:#{upstream_port}, token: #{SECRET_TOKEN}"
-        exec "#{bin}/inlets client --remote localhost:#{remote_port} --upstream localhost:#{upstream_port} --token #{SECRET_TOKEN}"
+        # Starting inlets client
+        exec "#{bin}/inlets client --url ws://localhost:#{remote_port} " \
+             "--upstream localhost:#{upstream_port} --token #{secret_token} --insecure"
       end
 
-      puts "Waiting for inlets websocket tunnel"
-      sleep 3
-
-      uri = URI("http://localhost:#{remote_port}/inlets-test")
-      puts "Querying upstream endpoint via inlets remote: #{uri}"
-      response = Net::HTTP.get_response(uri)
-      assert_match MOCK_RESPONSE, response.body
-      assert_equal response.code, "200"
+      sleep 3 # Waiting for inlets websocket tunnel
+      assert_match mock_response, shell_output("curl -s localhost:#{remote_port}/inlets-test")
     ensure
       cleanup("Mock Server", mock_upstream_server_pid)
       cleanup("Inlets Server", server_pid)

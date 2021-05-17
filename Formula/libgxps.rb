@@ -1,14 +1,20 @@
 class Libgxps < Formula
   desc "GObject based library for handling and rendering XPS documents"
   homepage "https://wiki.gnome.org/Projects/libgxps"
-  url "https://download.gnome.org/sources/libgxps/0.3/libgxps-0.3.1.tar.xz"
-  sha256 "1a939fc8fcea9471b7eca46b1ac90cff89a30d26f65c7c9a375a4bf91223fa94"
+  url "https://download.gnome.org/sources/libgxps/0.3/libgxps-0.3.2.tar.xz"
+  sha256 "6d27867256a35ccf9b69253eb2a88a32baca3b97d5f4ef7f82e3667fa435251c"
+  license "LGPL-2.1-or-later"
+
+  livecheck do
+    url :stable
+    regex(/libgxps[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "74f4662c40830e4697255a05447171637c749ce28a6aa7262ab29cbfca32d642" => :catalina
-    sha256 "f2a0b5d1e9d85ad84ab041381c3c0bdd8f6f98d2be8586cdf48958e4a85aab27" => :mojave
-    sha256 "ef0b670a2dcbbbc2e42e6dd9ada96353fad1d039c42d8a41ef5271b8370bdd25" => :high_sierra
-    sha256 "949980a659fa2c301992af86c54a91e47a9721e372348bb1e5b49891d55b5285" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "22c593c1dafcc8a09e55ba9fc2c376b404d0fb0b62f800065f0f6edf047bb2fa"
+    sha256 cellar: :any, big_sur:       "c5f3520c5a94f6e33ff52a745c1d1667440ef8d662948f16ad25e82155ac4c8d"
+    sha256 cellar: :any, catalina:      "994ff26d92b50c014da31562fadace384a425c61d42037e8a03c2fa8f3b6a27a"
+    sha256 cellar: :any, mojave:        "b1d3ce677599e912000eae265d671a8e38f21daefadcb0dd23845b8130665295"
   end
 
   head do
@@ -16,7 +22,7 @@ class Libgxps < Formula
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "glib"
@@ -26,7 +32,7 @@ class Libgxps < Formula
 
   def install
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
     end

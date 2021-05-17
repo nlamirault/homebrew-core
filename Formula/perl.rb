@@ -1,16 +1,28 @@
 class Perl < Formula
   desc "Highly capable, feature-rich programming language"
   homepage "https://www.perl.org/"
-  url "https://www.cpan.org/src/5.0/perl-5.30.0.tar.gz"
-  sha256 "851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2"
-  head "https://perl5.git.perl.org/perl.git", :branch => "blead"
+  url "https://www.cpan.org/src/5.0/perl-5.32.1.tar.xz"
+  sha256 "57cc47c735c8300a8ce2fa0643507b44c4ae59012bfdad0121313db639e02309"
+  license any_of: ["Artistic-1.0-Perl", "GPL-1.0-or-later"]
+  revision 1
+  head "https://github.com/perl/perl5.git", branch: "blead"
+
+  livecheck do
+    url "https://www.cpan.org/src/"
+    regex(/href=.*?perl[._-]v?(\d+\.\d*[02468](?:\.\d+)*)\.t/i)
+  end
 
   bottle do
-    sha256 "558b5c5408c82ec7e14ea7974b5f1e62ed5a5ed8343506c69b94becfe27e2488" => :catalina
-    sha256 "c0d17d9af9a950c65c7ac39f5d5bcdc2932ab281455107a5c55d1eda7d792f0d" => :mojave
-    sha256 "8529587433c3bf6985dd92d39808c01d9d421eeef8e25dc5b2921729d253c346" => :high_sierra
-    sha256 "086995758ea8f80844c3acb75ac8c177421560b382d22f63d128668f31918b0e" => :sierra
+    sha256 arm64_big_sur: "900ac321ecfc07d89588b203a6860fe3f3ba056a3565225d77115c99d651aed0"
+    sha256 big_sur:       "5178a634bfb37437ee40d836c3bacb1adb89516a553ef6a8c2d40cee9eea608b"
+    sha256 catalina:      "7ac87157d98223abcc2b25e35811c9dfd016f807454ec8fc219a910b4a9cdacc"
+    sha256 mojave:        "2663e8ce52b4fb4fab170e19fff638e0b65688a933a3cddd86696403323be88d"
   end
+
+  depends_on "berkeley-db"
+  depends_on "gdbm"
+
+  uses_from_macos "expat"
 
   # Prevent site_perl directories from being removed
   skip_clean "lib/perl5/site_perl"
@@ -30,25 +42,43 @@ class Perl < Formula
       -Duselargefiles
       -Dusethreads
     ]
+    on_macos do
+      args << "-Dsed=/usr/bin/sed"
+    end
 
     args << "-Dusedevel" if build.head?
 
     system "./Configure", *args
 
     system "make"
-    system "make", "test"
 
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    By default non-brewed cpan modules are installed to the Cellar. If you wish
-    for your modules to persist across updates we recommend using `local::lib`.
+  def post_install
+    on_linux do
+      perl_archlib = Utils.safe_popen_read("perl", "-MConfig", "-e", "print $Config{archlib}")
+      perl_core = Pathname.new(perl_archlib)/"CORE"
+      if File.readlines("#{perl_core}/perl.h").grep(/include <xlocale.h>/).any? &&
+         (OS::Linux::Glibc.system_version >= "2.26" ||
+         (Formula["glibc"].any_version_installed? && Formula["glibc"].version >= "2.26"))
+        # Glibc does not provide the xlocale.h file since version 2.26
+        # Patch the perl.h file to be able to use perl on newer versions.
+        # locale.h includes xlocale.h if the latter one exists
+        inreplace "#{perl_core}/perl.h", "include <xlocale.h>", "include <locale.h>"
+      end
+    end
+  end
 
-    You can set that up like this:
-      PERL_MM_OPT="INSTALL_BASE=$HOME/perl5" cpan local::lib
-      echo 'eval "$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)"' >> #{shell_profile}
-  EOS
+  def caveats
+    <<~EOS
+      By default non-brewed cpan modules are installed to the Cellar. If you wish
+      for your modules to persist across updates we recommend using `local::lib`.
+
+      You can set that up like this:
+        PERL_MM_OPT="INSTALL_BASE=$HOME/perl5" cpan local::lib
+        echo 'eval "$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)"' >> #{shell_profile}
+    EOS
   end
 
   test do

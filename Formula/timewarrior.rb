@@ -1,17 +1,17 @@
 class Timewarrior < Formula
   desc "Command-line time tracking application"
-  homepage "https://taskwarrior.org/docs/timewarrior/"
-  url "https://taskwarrior.org/download/timew-1.1.1.tar.gz"
-  sha256 "1f7d9a62e55fc5a3126433654ccb1fd7d2d135f06f05697f871897c9db77ccc9"
+  homepage "https://timewarrior.net/"
+  url "https://github.com/GothenburgBitFactory/timewarrior/releases/download/v1.4.2/timew-1.4.2.tar.gz"
+  sha256 "c3d3992aa8d2cc3cd86e59d00060fb4a3e16c15babce78451cc9d39a7f5bb2e1"
+  license "MIT"
   head "https://github.com/GothenburgBitFactory/timewarrior.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "021d9b46180d9644c6c5096c8b687c01ddc8fdf517e323870116bc02cbcfdeff" => :catalina
-    sha256 "48af9bcedd665d7c2541eb3edc9ed14bccf26a1b3861e295b971ed1d8c2cedc6" => :mojave
-    sha256 "add032f6bd1e1b67ff81902522473f6c46e232a097d338b711110a8dea7fc622" => :high_sierra
-    sha256 "79da22a5383fdd5e22eff38ac9deb005c745e78764e1278909b8488cc770dd0d" => :sierra
-    sha256 "71c77b016f36f2aa46d7aa823b9c7dead64f99d6a7458561caa76bb6c8d1c11f" => :el_capitan
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b725f7ad884389a11b3428f43ab9d823e179a5aa679a6506ea0b67eb65007c25"
+    sha256 cellar: :any_skip_relocation, big_sur:       "40d7ce6f5802ca1a755f6a722ebcabc68b574632007d95ef109ad99c2e7a4902"
+    sha256 cellar: :any_skip_relocation, catalina:      "4c872f73c14a7219179b3f468d5ceb0739b79ace42e69126f9b3549eac9cba94"
+    sha256 cellar: :any_skip_relocation, mojave:        "336d8bbaf618d17901774358a58772579318a405e7020c63583538283b1f2165"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "c15692ae447c6364eb7c74665e3b9d8acb01be7f31eb0f4ebaf92d7c7dc3f874"
   end
 
   depends_on "cmake" => :build

@@ -1,69 +1,71 @@
 class JenkinsLts < Formula
   desc "Extendable open-source CI server"
   homepage "https://jenkins.io/index.html#stable"
-  url "http://mirrors.jenkins.io/war-stable/2.190.3/jenkins.war"
-  sha256 "79c2042b30ad71dc9cf17a5877f64eaed405fa03e24e002ca60f8db73b7ad490"
+  url "https://get.jenkins.io/war-stable/2.277.4/jenkins.war"
+  sha256 "26b278064393befa74f543d23050ca08589a6c14207cac06a0fbf6994113e7a7"
+  license "MIT"
 
-  bottle :unneeded
+  livecheck do
+    url "https://www.jenkins.io/download/"
+    regex(%r{href=.*?/war-stable/v?(\d+(?:\.\d+)+)/jenkins\.war}i)
+  end
 
-  depends_on :java => "1.8"
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "5c2d01259d112b58905968cd2a0312e67f8185ca06277d49b9cb2eb3718c2c82"
+  end
+
+  depends_on "openjdk@11"
 
   def install
-    system "jar", "xvf", "jenkins.war"
-    libexec.install "jenkins.war", "WEB-INF/jenkins-cli.jar"
-    bin.write_jar_script libexec/"jenkins.war", "jenkins-lts", :java_version => "1.8"
-    bin.write_jar_script libexec/"jenkins-cli.jar", "jenkins-lts-cli", :java_version => "1.8"
+    system "#{Formula["openjdk@11"].opt_bin}/jar", "xvf", "jenkins.war"
+    libexec.install "jenkins.war", "WEB-INF/lib/cli-#{version}.jar"
+    bin.write_jar_script libexec/"jenkins.war", "jenkins-lts", java_version: "11"
+    bin.write_jar_script libexec/"cli-#{version}.jar", "jenkins-lts-cli", java_version: "11"
   end
 
-  def caveats; <<~EOS
-    Note: When using launchctl the port will be 8080.
-  EOS
+  def caveats
+    <<~EOS
+      Note: When using launchctl the port will be 8080.
+    EOS
   end
 
-  plist_options :manual => "jenkins-lts"
+  plist_options manual: "jenkins-lts"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>/usr/libexec/java_home</string>
-          <string>-v</string>
-          <string>1.8</string>
-          <string>--exec</string>
-          <string>java</string>
-          <string>-Dmail.smtp.starttls.enable=true</string>
-          <string>-jar</string>
-          <string>#{opt_libexec}/jenkins.war</string>
-          <string>--httpListenAddress=127.0.0.1</string>
-          <string>--httpPort=8080</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{Formula["openjdk@11"].opt_bin}/java</string>
+            <string>-Dmail.smtp.starttls.enable=true</string>
+            <string>-jar</string>
+            <string>#{opt_libexec}/jenkins.war</string>
+            <string>--httpListenAddress=127.0.0.1</string>
+            <string>--httpPort=8080</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
     ENV["JENKINS_HOME"] = testpath
-    ENV.append "_JAVA_OPTIONS", "-Djava.io.tmpdir=#{testpath}"
+    ENV.prepend "_JAVA_OPTIONS", "-Djava.io.tmpdir=#{testpath}"
 
-    pid = fork do
-      exec "#{bin}/jenkins-lts"
+    port = free_port
+    fork do
+      exec "#{bin}/jenkins-lts --httpPort=#{port}"
     end
     sleep 60
 
-    begin
-      output = shell_output("curl localhost:8080/")
-      assert_match(/Welcome to Jenkins!|Unlock Jenkins|Authentication required/, output)
-    ensure
-      Process.kill("SIGINT", pid)
-      Process.wait(pid)
-    end
+    output = shell_output("curl localhost:#{port}/")
+    assert_match(/Welcome to Jenkins!|Unlock Jenkins|Authentication required/, output)
   end
 end

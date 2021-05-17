@@ -1,15 +1,20 @@
 class TektoncdCli < Formula
   desc "CLI for interacting with TektonCD"
   homepage "https://github.com/tektoncd/cli"
-  url "https://github.com/tektoncd/cli/archive/v0.5.1.tar.gz"
+  url "https://github.com/tektoncd/cli/archive/v0.18.0.tar.gz"
+  sha256 "829a1be984eb05cab36152e124daae8fcb4706c25f6c21875f6ae319027fe809"
+  license "Apache-2.0"
 
-  sha256 "a6f812d84dd7f22a677e1c3aedc6af793c2b6eeff5a07c0b3736c661566df141"
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9e4e2ad188da30e4110d2b3a3e05f3ce72a82db3ca4a17049f0cc298b27b8b14" => :catalina
-    sha256 "82e31191057158baaaa3e8765e718be80d4ab40693895fb37bffc62152294c26" => :mojave
-    sha256 "4a81737917f2123301de1d9ab6dfd1ba5a44ac78150d53510c3a2a2bcbab4956" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "9fe4767970f512b80c5b2afab0a5eaeca008a80328f1a98a96419d764c494363"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4bc78cf2d023b4319e5ac4c7cd2635343ae9953cd205aa01502d16973fb53e4d"
+    sha256 cellar: :any_skip_relocation, catalina:      "92875ed3fac42f9a9d191643ca9b14e6766a07cd6b0a187e4520e3f51915ce9b"
+    sha256 cellar: :any_skip_relocation, mojave:        "a624d753ec18c4bdc16349380b139f645b616590e6aef2d83eb45d5f8d57d750"
   end
 
   depends_on "go" => :build
@@ -18,16 +23,16 @@ class TektoncdCli < Formula
     system "make", "bin/tkn"
 
     bin.install "bin/tkn" => "tkn"
-    output = Utils.popen_read("SHELL=bash #{bin}/tkn completion bash")
+    output = Utils.safe_popen_read({ "SHELL" => "bash" }, bin/"tkn", "completion", "bash")
     (bash_completion/"tkn").write output
-    output = Utils.popen_read("SHELL=zsh #{bin}/tkn completion zsh")
+    output = Utils.safe_popen_read({ "SHELL" => "zsh" }, bin/"tkn", "completion", "zsh")
     (zsh_completion/"_tkn").write output
     prefix.install_metafiles
   end
 
   test do
     cmd = "#{bin}/tkn pipelinerun describe homebrew-formula"
-    io = IO.popen(cmd, :err => [:child, :out])
+    io = IO.popen(cmd, err: [:child, :out])
     assert_match "Error: Couldn't get kubeConfiguration namespace", io.read
   end
 end

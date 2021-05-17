@@ -1,19 +1,30 @@
 class Ethereum < Formula
   desc "Official Go implementation of the Ethereum protocol"
   homepage "https://ethereum.github.io/go-ethereum/"
-  url "https://github.com/ethereum/go-ethereum/archive/v1.9.7.tar.gz"
-  sha256 "991ab9cad1697e32acf0f926e38e8d4f6ee3140d3f3236f971b178a6a35a187b"
+  url "https://github.com/ethereum/go-ethereum/archive/v1.10.3.tar.gz"
+  sha256 "693d202e3ee4a989c753ffd5032572621e3ee243eb344e6d0bfad5e2fe4ffa0d"
+  license "LGPL-3.0-or-later"
   head "https://github.com/ethereum/go-ethereum.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5aaf5a982bde3a764e566735e0bc835ba3c5f4db5f9b6121fa038ad662db23ed" => :mojave
-    sha256 "bc150a7ca03725fbdffb0c9ddf6f0d9ef3d01134c2a3117638b028d1e0b2a9ea" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6cc701ead59d6c9c64bd7f144ce2578223f7c9861fadd7fa69cc3c0a19423f9f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "cc41b9923218f988fcb50375840d55d097d224b1b895049c5eb38f065e5bef3a"
+    sha256 cellar: :any_skip_relocation, catalina:      "d04acc886604c978009c4c1ea6cee12eba388392863ef5050cbd63e449b113ba"
+    sha256 cellar: :any_skip_relocation, mojave:        "49b93b0076d62eb4ce3a7a4dffbc496a78a5700a58fba460e07c52ec0f95a466"
   end
 
   depends_on "go" => :build
 
   def install
+    on_linux do
+      # See https://github.com/golang/go/issues/26487
+      ENV.O0
+    end
     system "make", "all"
     bin.install Dir["build/bin/*"]
   end

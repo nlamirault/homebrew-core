@@ -1,15 +1,17 @@
 class Uncrustify < Formula
   desc "Source code beautifier"
   homepage "https://uncrustify.sourceforge.io/"
-  url "https://github.com/uncrustify/uncrustify/archive/uncrustify-0.70.0.tar.gz"
-  sha256 "d8ff60852e6db90c855cab18dd8003fde6f8694d8a85556a86f01114729c5185"
+  url "https://github.com/uncrustify/uncrustify/archive/uncrustify-0.72.0.tar.gz"
+  sha256 "d6fff70bc7823fac4c77013055333b79a4839909094e8eee8a14ee8f1777374e"
+  license "GPL-2.0-or-later"
   head "https://github.com/uncrustify/uncrustify.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "469d1f4300d8dbb2948c25e4e3f392bdde60e155826d4e600883cc2295b0416b" => :catalina
-    sha256 "9f71fed2975c8806e5777258cae7a3abe78161aa4249c049267dd56e3dda5e55" => :mojave
-    sha256 "9156b1c02f407548ca7333b53621f4a498488c47338784f307df30e573fe7327" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "327603c90e291b6f9f8c5bf837bfe4f22295cdf18dc397e012537eab2e7ca9b2"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ee6e6b6d193ed163cd8365382bc56dd621f5c8f6c3776f52e4b0b2aeb1b90329"
+    sha256 cellar: :any_skip_relocation, catalina:      "c22df6af4af60a023f95f2cdce327fffe740264e44382e5bcd97e6ea9245bdb7"
+    sha256 cellar: :any_skip_relocation, mojave:        "3340dd41ba1ad700ba8014225ac005c9a171d16b990ff275257f9c4f30097861"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "2af96b34e949ec3034f0c66c90918ac69b6b3f312e32ce4c27b0dfe158bfef40"
   end
 
   depends_on "cmake" => :build

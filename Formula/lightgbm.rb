@@ -1,14 +1,16 @@
 class Lightgbm < Formula
   desc "Fast, distributed, high performance gradient boosting framework"
   homepage "https://github.com/microsoft/LightGBM"
-  url "https://github.com/microsoft/LightGBM/archive/v2.3.0.tar.gz"
-  sha256 "e076034ef41229714d59f28c3bd2366830dd9dfb9deff62f9ebc6a26f9e1e975"
+  url "https://github.com/microsoft/LightGBM.git",
+      tag:      "v3.2.1",
+      revision: "b8e38ec1eb8020052d5b39e31e9f2cb6366fb873"
+  license "MIT"
 
   bottle do
-    cellar :any
-    sha256 "bc6300c70a89b96692e156fec5b69ead6f5797796002f5fb977a017d8ccb7186" => :catalina
-    sha256 "c49a9182068e8b8fa353d395fcf63dd3b4928c57205ce590da7a0d03d09c2bf9" => :mojave
-    sha256 "b4760edce9d2024bfde2be08c38d5f38e24d57b62a20ee9e858c6e6c288ebe09" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "ae442333df20db31769e25fedd3b32a4238eaa2a94f178c237fc567373f2a245"
+    sha256 cellar: :any, big_sur:       "84e713ec15bd966c737fc70b5650a725a21f3551df897a6160b2f27d8561d3a1"
+    sha256 cellar: :any, catalina:      "1c9178a701a721781329f0c4dc45bc955f84a5ee93f6f68fe817ae33168adcab"
+    sha256 cellar: :any, mojave:        "f714a735772ed4246dbf5bfff4c6c1f1b4d1cf36680488b16e80c19a1e3d3334"
   end
 
   depends_on "cmake" => :build
@@ -16,16 +18,7 @@ class Lightgbm < Formula
 
   def install
     mkdir "build" do
-      libomp = Formula["libomp"]
-      args = std_cmake_args
-      args << "-DOpenMP_C_FLAGS=\"-Xpreprocessor -fopenmp -I#{libomp.opt_include}\""
-      args << "-DOpenMP_C_LIB_NAMES=omp"
-      args << "-DOpenMP_CXX_FLAGS=\"-Xpreprocessor -fopenmp -I#{libomp.opt_include}\""
-      args << "-DOpenMP_CXX_LIB_NAMES=omp"
-      args << "-DOpenMP_omp_LIBRARY=#{libomp.opt_lib}/libomp.dylib"
-      args << "-DAPPLE_OUTPUT_DYLIB=ON"
-
-      system "cmake", *args, ".."
+      system "cmake", *std_cmake_args, "-DAPPLE_OUTPUT_DYLIB=ON", ".."
       system "make"
       system "make", "install"
     end

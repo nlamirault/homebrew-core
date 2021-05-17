@@ -1,40 +1,33 @@
 class KymaCli < Formula
   desc "Kyma command-line interface"
   homepage "https://kyma-project.io"
-  url "https://github.com/kyma-project/cli.git",
-      :tag      => "1.7.0",
-      :revision => "0e34ef7f27acabce43c3ebdbcf57534ed07fd46c"
+  url "https://github.com/kyma-project/cli/archive/1.22.0.tar.gz"
+  sha256 "e67a2ac40232a905159a411996f2c6ac1e7001c8946a6ccdde8139202276acd2"
+  license "Apache-2.0"
   head "https://github.com/kyma-project/cli.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f5d358b2ed496b15372fbb3a8d55fe9fd098dca993fa07010dcac813c2d41c54" => :catalina
-    sha256 "654166e59fdb3267fcf30d324498816f9288729b816cb608b9be8491399df166" => :mojave
-    sha256 "9ed07aec0b30388db0998f6298b1dc9add7772c9d391e755e719e3ee1eaa5866" => :high_sierra
+    sha256 cellar: :any_skip_relocation, big_sur:  "d895640623ccfa1e1fffe08cd24af86412a85c512df3ff77b3d972e5e176e9d8"
+    sha256 cellar: :any_skip_relocation, catalina: "2fa6250550b49678eea9991ef3076bfe3dc0505d8d44c249b9f8b0e7d64dacc5"
   end
 
   depends_on "go" => :build
+  depends_on macos: :catalina
 
   def install
-    ENV["GOPATH"] = buildpath
-    bin_path = buildpath/"src/github.com/kyma-project/cli/"
-    bin_path.install Dir["*"]
+    ldflags = %W[
+      -s -w
+      -X github.com/kyma-project/cli/cmd/kyma/version.Version=#{version}
+      -X github.com/kyma-project/cli/cmd/kyma/install.DefaultKymaVersion=#{version}
+      -X github.com/kyma-project/cli/cmd/kyma/upgrade.DefaultKymaVersion=#{version}
+    ].join(" ")
 
-    cd bin_path do
-      system "make", "build-darwin"
-      bin.install "bin/kyma-darwin" => "kyma"
-    end
+    system "go", "build", *std_go_args, "-o", bin/"kyma", "-ldflags", ldflags, "./cmd"
   end
 
   test do
-    output = shell_output("#{bin}/kyma --help")
-    assert_match "Kyma is a flexible and easy way to connect and extend enterprise applications in a cloud-native world.", output
-
-    output = shell_output("#{bin}/kyma version --client")
-    assert_match "Kyma CLI version", output
-
     touch testpath/"kubeconfig"
-    output = shell_output("#{bin}/kyma install --kubeconfig ./kubeconfig 2>&1", 1)
-    assert_match "invalid configuration", output
+    assert_match "invalid configuration",
+      shell_output("#{bin}/kyma install --kubeconfig ./kubeconfig 2>&1", 1)
   end
 end

@@ -1,28 +1,28 @@
 class KubeAws < Formula
   desc "Command-line tool to declaratively manage Kubernetes clusters on AWS"
-  homepage "https://kubernetes-incubator.github.io/kube-aws/"
-  url "https://github.com/kubernetes-incubator/kube-aws.git",
-      :tag      => "v0.14.2",
-      :revision => "fd0bdbe6d476318f0076d709e3643a08999a9e95"
-  head "https://github.com/kubernetes-incubator/kube-aws.git"
+  homepage "https://kubernetes-retired.github.io/kube-aws/"
+  url "https://github.com/kubernetes-retired/kube-aws.git",
+      tag:      "v0.16.4",
+      revision: "c74d91ecd6760d33111dc8c7f8f51bf816424310"
+  license "Apache-2.0"
+  head "https://github.com/kubernetes-retired/kube-aws.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f2e08350a7258a9f5679c83aa3635b8646b5aa86c0337eda5e4c023d3af9d40b" => :catalina
-    sha256 "8b402c944c54683c85130bfc0711d12b991d1288d1eff24942fcd812adb3c04d" => :mojave
-    sha256 "3db554acae43e8d8d651bf166853c7b7e23a098f4bb85e9a6dfe80afa9f1299e" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7af14149a6b45de2067d7fbb256bcc452582134eda27688a82527d7a7a074b41"
+    sha256 cellar: :any_skip_relocation, big_sur:       "8e8c892bc74895bf9567f96ba0d27d74b206197f20bd6d348c96732984dad507"
+    sha256 cellar: :any_skip_relocation, catalina:      "1c5004445c0be8fd055ff78439bd3c0b413cd56247385c1453c5956fbe9503b1"
+    sha256 cellar: :any_skip_relocation, mojave:        "f05e8f3cfbe5f8c17f2cd6d3a854b7c329d7f922f03271bb36ca8497589ef7d4"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "5172a4ad55d3977c81d405bc67d91a35ead719e24c555d5843529d2489323d79"
   end
 
+  # Fork can be found at: https://github.com/kube-aws/kube-aws
+  deprecate! date: "2020-09-29", because: :repo_archived
+
   depends_on "go" => :build
+  depends_on "packr" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/github.com/kubernetes-incubator/kube-aws"
-    dir.install buildpath.children - [buildpath/".brew_home"]
-    cd dir do
-      system "make", "OUTPUT_PATH=#{bin}/kube-aws"
-      prefix.install_metafiles
-    end
+    system "make", "OUTPUT_PATH=#{bin}/kube-aws"
   end
 
   test do

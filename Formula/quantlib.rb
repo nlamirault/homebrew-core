@@ -1,15 +1,15 @@
 class Quantlib < Formula
   desc "Library for quantitative finance"
   homepage "https://www.quantlib.org/"
-  url "https://dl.bintray.com/quantlib/releases/QuantLib-1.16.tar.gz"
-  sha256 "204ad5822259f9a9146eaf660f0b756100604e3adb85c501d41d201bf09dec94"
+  url "https://github.com/lballabio/QuantLib/releases/download/QuantLib-v1.22/QuantLib-1.22.tar.gz"
+  sha256 "85c81816f689f458596dd7073e4da8fd7f596c1e4c8ada81a6300389a39588af"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any
-    sha256 "2c0d5709ac2d0150d9a80e98037e065fb427754c8a5ffc73657b436e1833079e" => :catalina
-    sha256 "39702a332dbff419f3d34c12a19ee378a369e8a20400d4a35b16370916c2e22f" => :mojave
-    sha256 "c39c206cb0c0b96b6dd218a50020c683095362216c06ad009fea4210a53a0b0c" => :high_sierra
-    sha256 "d7589436bfcb0ce268bb25db660500440cb299fd751e32bfbc21485e54b57a98" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "214a9ab699f70d2ebb04b657765226d2d1fed652b58569ad8c4313ff44bd8d9f"
+    sha256 cellar: :any, big_sur:       "603406285fa983b9d1554e9d63ac32aace6411ffe25c4159dba099d9e1a7db02"
+    sha256 cellar: :any, catalina:      "90c93befaffe6c8a9ef0375d9973cebc308efa015842c30e7230797586efb8c6"
+    sha256 cellar: :any, mojave:        "cd8bf24144bb637bffc30582a3bea35a1c4a14aee394ae355a541d414e88484f"
   end
 
   head do
@@ -23,6 +23,7 @@ class Quantlib < Formula
   depends_on "boost"
 
   def install
+    ENV.cxx11
     (buildpath/"QuantLib").install buildpath.children if build.stable?
     cd "QuantLib" do
       system "./autogen.sh" if build.head?

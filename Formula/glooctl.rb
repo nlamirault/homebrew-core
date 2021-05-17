@@ -1,31 +1,24 @@
 class Glooctl < Formula
   desc "Envoy-Powered API Gateway"
-  homepage "https://gloo.solo.io"
+  homepage "https://docs.solo.io/gloo/latest/"
   url "https://github.com/solo-io/gloo.git",
-      :tag      => "v0.21.3",
-      :revision => "edf4a9d39f81eceabd6bc1061df7c52259ca9f18"
+      tag:      "v1.7.6",
+      revision: "fe32be19033b324c20383e8480597e89ef1580c7"
+  license "Apache-2.0"
   head "https://github.com/solo-io/gloo.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "7f2dee9d8e6f2276a3d0a0f721bd8905644f89e7b0c80f1af60424cffccd398e" => :catalina
-    sha256 "0689c1195ecbb4a74e468978ea1290a96a9a57bd6600cd516f32a78ce9078153" => :mojave
-    sha256 "f5843cedaa6cdfa67a2c385e92fd3167e850758c700c3bfbf5f1b6cffc4faf67" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "76992c0e9163202f8db55a41b18beff15a7faea82b1ff8c41bc53adf94872b04"
+    sha256 cellar: :any_skip_relocation, big_sur:       "758fad0be19ec993dd16e7d92ab3dd87701f862e426d443793ae484d0b992ffc"
+    sha256 cellar: :any_skip_relocation, catalina:      "576728d8504874c868b0470448d341348e604f5f4100f8b0ae66ffda437a3f41"
+    sha256 cellar: :any_skip_relocation, mojave:        "4fca6467ba8a749eb9096b91b06131f9ebc3d2273c0269b3a3c3dc49f883529a"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/github.com/solo-io/gloo"
-    dir.install buildpath.children - [buildpath/".brew_home"]
-
-    cd dir do
-      system "dep", "ensure", "-vendor-only"
-      system "make", "glooctl", "TAGGED_VERSION=v#{version}"
-      bin.install "_output/glooctl"
-    end
+    system "make", "glooctl", "TAGGED_VERSION=v#{version}"
+    bin.install "_output/glooctl"
   end
 
   test do
@@ -40,6 +33,6 @@ class Glooctl < Formula
 
     # Should error out as it needs access to a Kubernetes cluster to operate correctly
     status_output = shell_output("#{bin}/glooctl get proxy 2>&1", 1)
-    assert_match "failed to create proxy client", status_output
+    assert_match "failed to create kube client", status_output
   end
 end

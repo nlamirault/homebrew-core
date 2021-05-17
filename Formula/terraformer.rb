@@ -1,38 +1,32 @@
 class Terraformer < Formula
   desc "CLI tool to generate terraform files from existing infrastructure"
   homepage "https://github.com/GoogleCloudPlatform/terraformer"
-  url "https://github.com/GoogleCloudPlatform/terraformer.git",
-    :tag      => "0.8.4",
-    :revision => "3df9db7f4811e89d2633e78c3fd4743ec0062d4f"
+  url "https://github.com/GoogleCloudPlatform/terraformer/archive/0.8.13.tar.gz"
+  sha256 "5e7519aecb2cb6a9f1644e1c4ad977299f5878521f46074c77191cb59241696c"
+  license "Apache-2.0"
+  head "https://github.com/GoogleCloudPlatform/terraformer.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "7197e3ecc256aff6efb2e8d186a5507270431f4d0f37735e24aa3d29c76a9bb5" => :catalina
-    sha256 "0a9c047c5429ff44af7b0f8451b38f8b966f193ddb073e9c6ca3105d84498f0c" => :mojave
-    sha256 "7174d86df23c114fd2e3d92fc8d0172631011e4e725334e32e8fe3ec04245749" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "bfa97578206fab28fb072f7615dcd391c4ba69e3e9b902cb490199d999f8f44e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b15c9ce44c82d5d018991adc1e9a2c068cd2dd68ba45ff4551b2e0c31e318792"
+    sha256 cellar: :any_skip_relocation, catalina:      "44f560666545dcb9d8ad4bf516a726cd0ac847a9884451ab8890d80bdd2a71bd"
+    sha256 cellar: :any_skip_relocation, mojave:        "98701030b0679953f1f053b6ddd4bad6ddb72d1cd2e0895cdfacbe67a586d314"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    dir = buildpath/"src/github.com/GoogleCloudPlatform/terraformer"
-    dir.install buildpath.children
-
-    cd dir do
-      system "go", "build", "-o", bin/"terraformer"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-s -w"
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/terraformer version")
+    assert_match version.to_s,
+      shell_output("#{bin}/terraformer version")
 
-    help_output = "Available Commands"
-    assert_match help_output.to_s, shell_output("#{bin}/terraformer -h")
+    assert_match "Available Commands",
+      shell_output("#{bin}/terraformer -h")
 
-    import_error = "aaa"
-    assert_match import_error.to_s, shell_output("#{bin}/terraformer import google --resources=gcs --projects=aaa 2>&1", 1)
+    assert_match "aaa",
+      shell_output("#{bin}/terraformer import google --resources=gcs --projects=aaa 2>&1", 1)
   end
 end

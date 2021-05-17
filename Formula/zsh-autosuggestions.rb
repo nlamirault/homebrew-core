@@ -1,10 +1,14 @@
 class ZshAutosuggestions < Formula
   desc "Fish-like fast/unobtrusive autosuggestions for zsh"
   homepage "https://github.com/zsh-users/zsh-autosuggestions"
-  url "https://github.com/zsh-users/zsh-autosuggestions/archive/v0.6.3.tar.gz"
-  sha256 "06f5c5bfedc469dc51f7a2db26ddc2dbcd2e742ea82d8057a7fa9e215c39db4c"
+  url "https://github.com/zsh-users/zsh-autosuggestions/archive/v0.6.4.tar.gz"
+  sha256 "0b6e251ced5fd7b5b78ea01f798ecc1b46169743a717567f0ec0a21198a372e8"
+  license "MIT"
 
-  bottle :unneeded
+  bottle do
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, all: "e204984ca8abc4d6ca97b0b66acfd0136c3bfac10aba59f55b6f3cc3b189934e"
+  end
 
   def install
     pkgshare.install "zsh-autosuggestions.zsh"

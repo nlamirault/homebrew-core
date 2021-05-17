@@ -1,26 +1,33 @@
 class RustupInit < Formula
-  desc "The Rust toolchain installer"
-  homepage "https://github.com/rust-lang/rustup.rs"
-  url "https://github.com/rust-lang/rustup.rs/archive/1.20.2.tar.gz"
-  sha256 "4d47ef7468c615fd10fbb07a16c15754336263d7417ee1685dfbd6e3ec151084"
+  desc "Rust toolchain installer"
+  homepage "https://github.com/rust-lang/rustup"
+  url "https://github.com/rust-lang/rustup/archive/1.24.1.tar.gz"
+  sha256 "e69bce5a4b1abe05489b19d2906c258b27f70ff8b13f59e5932527ae6b77c6a6"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "eeae5fd83583db5ccaef4d02e7d4bab357dc3983ba28856240b21a16c7e31fe4" => :catalina
-    sha256 "e5e40bdec0a7e7e370d841a1251142d872653bf2b1601a1d81889af21ef6a94f" => :mojave
-    sha256 "da5d48864bb15a73c7d9b20cf338fd6840ce3f77c1083598ebeac12f1243e779" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "64b2636b20d6ff2fe369cc93f4d9e5ba1ed144fd7b2265aabefe21b54a4bd8f0"
+    sha256 cellar: :any_skip_relocation, big_sur:       "02eee26e1f46a4649e66c90358d1821f5c48379e69ffc90afcac03655b8dda9a"
+    sha256 cellar: :any_skip_relocation, catalina:      "4edb96f7626d6a24750d63965d9a19000035aa01f69907982e89531c1ac1f57e"
+    sha256 cellar: :any_skip_relocation, mojave:        "c34fd99f7a6249f02ac90650a8de7bd78b237f2122629795b8645420c3cdc6e3"
   end
 
   depends_on "rust" => :build
+
+  uses_from_macos "curl"
+  uses_from_macos "xz"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "openssl@1.1"
+  end
 
   def install
     cargo_home = buildpath/"cargo_home"
     cargo_home.mkpath
     ENV["CARGO_HOME"] = cargo_home
 
-    system "cargo", "install", "--locked", "--root", prefix, "--path", ".",
-                    "--features", "no-self-update"
+    system "cargo", "install", "--features", "no-self-update", *std_cargo_args
   end
 
   test do

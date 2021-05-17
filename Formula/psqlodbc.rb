@@ -1,16 +1,19 @@
 class Psqlodbc < Formula
   desc "Official PostgreSQL ODBC driver"
   homepage "https://odbc.postgresql.org"
-  url "https://ftp.postgresql.org/pub/odbc/versions/src/psqlodbc-10.03.0000.tar.gz"
-  sha256 "0d2ff2d10d9347ef6ce83c7ca24f4cb20b4044eeef9638c8ae3bc8107e9e92f8"
-  revision 1
+  url "https://ftp.postgresql.org/pub/odbc/versions/src/psqlodbc-13.01.0000.tar.gz"
+  sha256 "435de2ea38109b8384ed76d327032b73a53a915379a752a34b0f9c7539055da7"
+
+  livecheck do
+    url "https://ftp.postgresql.org/pub/odbc/versions/src/"
+    regex(/href=.*?psqlodbc[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "f1e37e8b4f0c789eabc6760b20b3e877d10855b4f6bc1ac13b6a2b70590be15b" => :catalina
-    sha256 "49fa960ad8d53bc332464cca31c41168b252b486da1f3aee9afe8a8937df572c" => :mojave
-    sha256 "3c06991bd75a012f7087a11940597221092f780efbf686e88770c996df05e278" => :high_sierra
-    sha256 "b9bbfb50bdc7b77fe47a6b1eebd80adaf2ae8fc2b1f5be527aeb531ddfc585fe" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "f8d95d1b2ba785dcb50b91b0b50e49b4f40d7f05b5417dc7eaf8b078ca88464a"
+    sha256 cellar: :any, big_sur:       "4bc2ee5d89cc5f84220abdcbcef1a42b30959cf19b071a46a13cb9c583ee9142"
+    sha256 cellar: :any, catalina:      "3d65ab705dbece7ef42f2fc975e3ee8f118a6fc1e12a51d9b34425cf83dfc860"
+    sha256 cellar: :any, mojave:        "9b8332fa7f0b03677744c1e48057e65f04140892cc143fa32858179c9f1cc38a"
   end
 
   head do

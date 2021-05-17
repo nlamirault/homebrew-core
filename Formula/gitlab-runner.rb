@@ -1,76 +1,82 @@
 class GitlabRunner < Formula
-  desc "The official GitLab CI runner written in Go"
+  desc "Official GitLab CI runner"
   homepage "https://gitlab.com/gitlab-org/gitlab-runner"
   url "https://gitlab.com/gitlab-org/gitlab-runner.git",
-      :tag      => "v12.5.0",
-      :revision => "577f813d20d4a51e2843de62a07b7169f6f11019"
+      tag:      "v13.11.0",
+      revision: "7f7a4bb064e847bbd2196438d70fe82634141a00"
+  license "MIT"
   head "https://gitlab.com/gitlab-org/gitlab-runner.git"
 
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9cc9966bd27716f0c20cca63c9637e49b9a24dbd70884860d708fc6e21de1d25" => :catalina
-    sha256 "6387af32f3cb551258290e5df712706810adc57ff34136da006ac544b38385e7" => :mojave
-    sha256 "0edf07dc6ff44c6ce3735c63c799c12ddc9dbf21941b399f5e9ffa6704313b60" => :high_sierra
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "06a0c36e21fe7890a6db42248340f76d69866cee75fc5c256b75709f91b39a68"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4692746389a5a21651a2c38f35e1fcbd184a5528620cd46eac53d13c0fc669ab"
+    sha256 cellar: :any_skip_relocation, catalina:      "294f72df991ce1480295b4cc62a9c747d0d24e2608ee54bc83a375042788dbff"
+    sha256 cellar: :any_skip_relocation, mojave:        "a4963e7cd773241ddcb59da7ba4430d6a1b6551bef0d48d724922fa707a0e7b1"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
     dir = buildpath/"src/gitlab.com/gitlab-org/gitlab-runner"
     dir.install buildpath.children
 
     cd dir do
       proj = "gitlab.com/gitlab-org/gitlab-runner"
-      commit = Utils.popen_read("git", "rev-parse", "--short=8", "HEAD").chomp
-      branch = version.to_s.split(".")[0..1].join("-") + "-stable"
-      built = Time.new.strftime("%Y-%m-%dT%H:%M:%S%:z")
       system "go", "build", "-ldflags", <<~EOS
         -X #{proj}/common.NAME=gitlab-runner
         -X #{proj}/common.VERSION=#{version}
-        -X #{proj}/common.REVISION=#{commit}
-        -X #{proj}/common.BRANCH=#{branch}
-        -X #{proj}/common.BUILT=#{built}
+        -X #{proj}/common.REVISION=#{Utils.git_short_head(length: 8)}
+        -X #{proj}/common.BRANCH=#{version.major}-#{version.minor}-stable
+        -X #{proj}/common.BUILT=#{Time.new.strftime("%Y-%m-%dT%H:%M:%S%:z")}
       EOS
 
       bin.install "gitlab-runner"
-      prefix.install_metafiles
     end
   end
 
-  plist_options :manual => "gitlab-runner start"
+  plist_options manual: "gitlab-runner start"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>SessionCreate</key><false/>
-        <key>KeepAlive</key><true/>
-        <key>RunAtLoad</key><true/>
-        <key>Disabled</key><false/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/gitlab-runner</string>
-          <string>run</string>
-          <string>--working-directory</string>
-          <string>#{ENV["HOME"]}</string>
-          <string>--config</string>
-          <string>#{ENV["HOME"]}/.gitlab-runner/config.toml</string>
-          <string>--service</string>
-          <string>gitlab-runner</string>
-          <string>--syslog</string>
-        </array>
-        <key>EnvironmentVariables</key>
-          <dict>
-            <key>PATH</key>
-            <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>SessionCreate</key><false/>
+          <key>KeepAlive</key><true/>
+          <key>RunAtLoad</key><true/>
+          <key>Disabled</key><false/>
+          <key>LegacyTimers</key><true/>
+          <key>ProcessType</key>
+          <string>Interactive</string>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/gitlab-runner</string>
+            <string>run</string>
+            <string>--working-directory</string>
+            <string>#{ENV["HOME"]}</string>
+            <string>--config</string>
+            <string>#{ENV["HOME"]}/.gitlab-runner/config.toml</string>
+            <string>--service</string>
+            <string>gitlab-runner</string>
+            <string>--syslog</string>
+          </array>
+          <key>EnvironmentVariables</key>
+            <dict>
+              <key>PATH</key>
+              <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+          </dict>
         </dict>
-      </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do

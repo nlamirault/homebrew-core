@@ -3,21 +3,26 @@ class Mujs < Formula
   homepage "https://www.mujs.com/"
   # use tag not tarball so the version in the pkg-config file isn't blank
   url "https://github.com/ccxvii/mujs.git",
-      :tag      => "1.0.6",
-      :revision => "14dc9355bd71818cf01c1c690c1c91a0978ea9b8"
+      tag:      "1.1.2",
+      revision: "7ef066a3bb95bf83e7c5be50d859e62e58fe8515"
+  license "ISC"
   head "https://github.com/ccxvii/mujs.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "8c318a1b2f86b2b1e0f960843c60af7e650bf8780049618151b4b4906de66996" => :catalina
-    sha256 "f72a17230b0e05824d76d355ea9d6950411194955af3322a908146601516baa9" => :mojave
-    sha256 "82a44b3406b0bdbf9f0aaa895c7dc6b1a0f2b31c423317c148b7da5c3c973ff8" => :high_sierra
-    sha256 "de680f18725e4e787cdd6a22d0a7e2ba2e2fc818171726b50068075624e8eb8e" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "4a9c425ba618532c01217ca4b40bc98e6ed3db93694a738da552ddcb5a368e15"
+    sha256 cellar: :any, big_sur:       "232f818ac53dda527860225fa358b2e7aa46f1c1385335406a48c9254dbbcce7"
+    sha256 cellar: :any, catalina:      "7a17de9728ae20735d5ed74719a81aaa5be74c37d726f11dc161a7c5ef8ba8cd"
+    sha256 cellar: :any, mojave:        "d42e999efee733893ea29b4ab71582cd26954d25ee6d258a2eb944d6c69a96dd"
+  end
+
+  on_linux do
+    depends_on "readline"
   end
 
   def install
     system "make", "release"
     system "make", "prefix=#{prefix}", "install"
+    system "make", "prefix=#{prefix}", "install-shared"
   end
 
   test do

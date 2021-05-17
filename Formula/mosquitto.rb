@@ -1,24 +1,41 @@
 class Mosquitto < Formula
   desc "Message broker implementing the MQTT protocol"
   homepage "https://mosquitto.org/"
-  url "https://mosquitto.org/files/source/mosquitto-1.6.7.tar.gz"
-  sha256 "bcd31a8fbbd053fee328986fadd8666d3058357ded56b9782f7d4f19931d178e"
+  url "https://mosquitto.org/files/source/mosquitto-2.0.10.tar.gz"
+  sha256 "0188f7b21b91d6d80e992b8d6116ba851468b3bd154030e8a003ed28fb6f4a44"
+  # dual-licensed under EPL-1.0 and EDL-1.0 (Eclipse Distribution License v1.0),
+  # EDL-1.0 is not in the SPDX list
+  license "EPL-1.0"
+  revision 1
+
+  livecheck do
+    url "https://mosquitto.org/download/"
+    regex(/href=.*?mosquitto[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "9caba2fbf7de9a7a30d4a4a86ec6ecc454bdd8b92a2701971f9a08078efe954d" => :catalina
-    sha256 "8af01b14729497fc4a2a16fb00089b1ba8b7b6229356a90ba4e7d5d5d0f0c5c2" => :mojave
-    sha256 "ece1e8d57c81d8f3f7dcdd1269805632147a0a1acd004dab10aae48137fe3df9" => :high_sierra
-    sha256 "48533fb7dbc76f95dc562c46bcf20aa07a88e2233626ae1a8cc33bb780f30ced" => :sierra
+    sha256 arm64_big_sur: "37075e4522029d3c29a0f5f01a2765e21d7d7861b916fbc411c18aabb5eecc1d"
+    sha256 big_sur:       "b4d048a8ae02ea81048315280fdca94beb5c36f9cbf2fc5e7d572147a1d9056f"
+    sha256 catalina:      "3e75e7bf3ff9c1e75b55ceb0558341e5105714552498252a74bbfabf061c5b83"
+    sha256 mojave:        "12ea925ba276e00955710d333279aa06ecfe0038a37a9ce7c9d4ad64bb628a96"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
+  depends_on "cjson"
   depends_on "libwebsockets"
   depends_on "openssl@1.1"
 
+  uses_from_macos "libxslt" => :build
+
+  on_linux do
+    depends_on "util-linux"
+  end
+
   def install
-    system "cmake", ".", *std_cmake_args, "-DWITH_WEBSOCKETS=ON"
+    system "cmake", ".", *std_cmake_args,
+                    "-DWITH_WEBSOCKETS=ON",
+                    "-DCMAKE_INSTALL_RPATH=#{lib}"
     system "make", "install"
   end
 
@@ -26,41 +43,47 @@ class Mosquitto < Formula
     (var/"mosquitto").mkpath
   end
 
-  def caveats; <<~EOS
-    mosquitto has been installed with a default configuration file.
-    You can make changes to the configuration by editing:
-        #{etc}/mosquitto/mosquitto.conf
-  EOS
+  def caveats
+    <<~EOS
+      mosquitto has been installed with a default configuration file.
+      You can make changes to the configuration by editing:
+          #{etc}/mosquitto/mosquitto.conf
+    EOS
   end
 
-  plist_options :manual => "mosquitto -c #{HOMEBREW_PREFIX}/etc/mosquitto/mosquitto.conf"
+  plist_options manual: "mosquitto -c #{HOMEBREW_PREFIX}/etc/mosquitto/mosquitto.conf"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/mosquitto</string>
-        <string>-c</string>
-        <string>#{etc}/mosquitto/mosquitto.conf</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>KeepAlive</key>
-      <false/>
-      <key>WorkingDirectory</key>
-      <string>#{var}/mosquitto</string>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_sbin}/mosquitto</string>
+          <string>-c</string>
+          <string>#{etc}/mosquitto/mosquitto.conf</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <false/>
+        <key>WorkingDirectory</key>
+        <string>#{var}/mosquitto</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
     quiet_system "#{sbin}/mosquitto", "-h"
     assert_equal 3, $CHILD_STATUS.exitstatus
+    quiet_system "#{bin}/mosquitto_ctrl", "dynsec", "help"
+    assert_equal 0, $CHILD_STATUS.exitstatus
+    quiet_system "#{bin}/mosquitto_passwd", "-c", "-b", "/tmp/mosquitto.pass", "foo", "bar"
+    assert_equal 0, $CHILD_STATUS.exitstatus
   end
 end

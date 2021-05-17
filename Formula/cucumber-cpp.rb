@@ -3,18 +3,19 @@ class CucumberCpp < Formula
   homepage "https://cucumber.io"
   url "https://github.com/cucumber/cucumber-cpp/archive/v0.5.tar.gz"
   sha256 "9e1b5546187290b265e43f47f67d4ce7bf817ae86ee2bc5fb338115b533f8438"
-  revision 4
+  license "MIT"
+  revision 8
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "bdb03c9be8588d3f06468697f160a7f79deba63bdc8557e57904c4d73064678f" => :catalina
-    sha256 "1aa6806faca85d2b63ce287fe4e5f2d61653b845bb1bae9761646464a4d8220e" => :mojave
-    sha256 "1d0058ed4d37fdf0ae44ab2205e202b603edd295c9d20b32d3c253d816300d29" => :high_sierra
+    rebuild 2
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d8e4ee459e5958caea72acc108997caadf550d9a4436b4f8e27623a79befd2bd"
+    sha256 cellar: :any_skip_relocation, big_sur:       "530841b3b6fe59be5a5ea5fdb4fd3fea2acdf69945b20fc8aa8bf9a7c3d625aa"
+    sha256 cellar: :any_skip_relocation, catalina:      "c7ef7cd101beced9c438b3186da6993b5732f2098c7d7e03735d01687ec7655e"
+    sha256 cellar: :any_skip_relocation, mojave:        "754750a86eb2236fca926fcae27d58976798d7f817e97cc5263673be3dbce3ea"
   end
 
   depends_on "cmake" => :build
-  depends_on "ruby" => :test if MacOS.version <= :sierra
+  depends_on "ruby" => :test
   depends_on "boost"
 
   def install
@@ -31,16 +32,11 @@ class CucumberCpp < Formula
   end
 
   test do
+    ENV.prepend_path "PATH", Formula["ruby"].opt_bin
     ENV["GEM_HOME"] = testpath
     ENV["BUNDLE_PATH"] = testpath
-    if MacOS.version >= :mojave && MacOS::CLT.installed?
-      ENV.delete("CPATH")
-      ENV["SDKROOT"] = MacOS::CLT.sdk_path(MacOS.version)
-    elsif MacOS.version == :high_sierra
-      ENV.delete("CPATH")
-      ENV.delete("SDKROOT")
-    end
-    system "gem", "install", "cucumber", "-v", "3.0.0"
+
+    system "gem", "install", "cucumber", "-v", "5.2.0"
 
     (testpath/"features/test.feature").write <<~EOS
       Feature: Test
@@ -65,7 +61,8 @@ class CucumberCpp < Formula
     system ENV.cxx, "test.cpp", "-o", "test", "-I#{include}", "-L#{lib}",
            "-lcucumber-cpp", "-I#{Formula["boost"].opt_include}",
            "-L#{Formula["boost"].opt_lib}", "-lboost_regex", "-lboost_system",
-           "-lboost_program_options", "-lboost_filesystem", "-lboost_chrono"
+           "-lboost_program_options", "-lboost_filesystem", "-lboost_chrono",
+           "-pthread"
     begin
       pid = fork { exec "./test" }
       expected = <<~EOS
@@ -79,7 +76,7 @@ class CucumberCpp < Formula
         1 scenario \(1 passed\)
         3 steps \(3 passed\)
       EOS
-      assert_match expected, shell_output(testpath/"bin/cucumber")
+      assert_match expected, shell_output("#{testpath}/bin/cucumber --publish-quiet")
     ensure
       Process.kill("SIGINT", pid)
       Process.wait(pid)

@@ -1,15 +1,16 @@
 class Httpd < Formula
   desc "Apache HTTP server"
   homepage "https://httpd.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=/httpd/httpd-2.4.41.tar.bz2"
-  sha256 "133d48298fe5315ae9366a0ec66282fa4040efa5d566174481077ade7d18ea40"
-  revision 1
+  url "https://www.apache.org/dyn/closer.lua?path=httpd/httpd-2.4.47.tar.bz2"
+  mirror "https://archive.apache.org/dist/httpd/httpd-2.4.47.tar.bz2"
+  sha256 "23d006dbc8e578116a1138fa457eea824048458e89c84087219f0372880c03ca"
+  license "Apache-2.0"
 
   bottle do
-    sha256 "c532f46853817d18cfaeadecf1ec4e7b47a57b80eee3d01272aaa99a16c93bf6" => :catalina
-    sha256 "9f9969abde4a61949b0279f68d6fcc616d1546dd2c1b4fd61012bde1f5d27ee8" => :mojave
-    sha256 "143af690fd1f26f07e79009da6e674a0cb56c190f6fb486f9e61f82a5ab36a0a" => :high_sierra
-    sha256 "9a085a0b728b5bc75bda265d7d4c5360187038eb339c43a681d789599b814dcf" => :sierra
+    sha256 arm64_big_sur: "c920b68cd1d5fc3f190a0736ee6690992c2fa77600f7b0bbcb8249c50fb1f62a"
+    sha256 big_sur:       "5f7ac3264c609c72a563ce7112bf0347e229f1cbfd717b3884c3e77139c8b296"
+    sha256 catalina:      "f5efc2eb76845fb30b15dca64bf090fedfde3a85ce553deab906493cdf0527d2"
+    sha256 mojave:        "5182142b3d05791a094cfe92c0f053114cf15f4fea8a07f90c3867d4d4a16434"
   end
 
   depends_on "apr"
@@ -18,6 +19,7 @@ class Httpd < Formula
   depends_on "nghttp2"
   depends_on "openssl@1.1"
   depends_on "pcre"
+
   uses_from_macos "zlib"
 
   def install
@@ -103,6 +105,8 @@ class Httpd < Formula
       s.gsub! pcre.prefix.realpath, pcre.opt_prefix
       s.gsub! "${prefix}/lib/httpd/modules",
               "#{HOMEBREW_PREFIX}/lib/httpd/modules"
+      s.gsub! "#{HOMEBREW_SHIMS_PATH}/mac/super",
+              "#{HOMEBREW_PREFIX}/bin"
     end
   end
 
@@ -120,26 +124,12 @@ class Httpd < Formula
     EOS
   end
 
-  plist_options :manual => "apachectl start"
+  plist_options manual: "apachectl start"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/httpd</string>
-        <string>-D</string>
-        <string>FOREGROUND</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
+  service do
+    run [opt_bin/"httpd", "-D", "FOREGROUND"]
+    environment_variables PATH: std_service_path_env
+    run_type :immediate
   end
 
   test do
@@ -149,11 +139,7 @@ class Httpd < Formula
     assert_predicate lib/"httpd/modules/mod_xml2enc.so", :exist?
 
     begin
-      require "socket"
-
-      server = TCPServer.new(0)
-      port = server.addr[1]
-      server.close
+      port = free_port
 
       expected_output = "Hello world!"
       (testpath/"index.html").write expected_output

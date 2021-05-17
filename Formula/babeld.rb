@@ -1,29 +1,36 @@
 class Babeld < Formula
   desc "Loop-avoiding distance-vector routing protocol"
-  homepage "https://www.irif.univ-paris-diderot.fr/~jch/software/babel/"
-  url "https://www.irif.fr/~jch/software/files/babeld-1.8.5.tar.gz"
-  sha256 "202d99c275604507c6ce133710522f1ddfb62cb671c26f1ac2d3ab44af3d5bc4"
+  homepage "https://www.irif.fr/~jch/software/babel/"
+  url "https://www.irif.fr/~jch/software/files/babeld-1.10.tar.gz"
+  sha256 "a5f54a08322640e97399bf4d1411a34319e6e277fbb6fc4966f38a17d72a8dea"
+  license "MIT"
   head "https://github.com/jech/babeld.git"
 
+  livecheck do
+    url "https://www.irif.fr/~jch/software/files/"
+    regex(/href=.*?babeld[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "df3d973d8ed8dec8c9a221ffdd27652f996107da4fa380f3f339523778e0fe70" => :catalina
-    sha256 "fb398b6cef7a5a407466ffa42f0d8a7dfdac6c7006f0846c79efa5009d3a81ec" => :mojave
-    sha256 "232cec0735999bea52ddb43b14a49c79e82782092842c11bf757feddfb9c3fef" => :high_sierra
-    sha256 "6cee560393876a17eb87afaae552743809b241761119dfb4183af91430932988" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "84bd566d6b25d9b9a5f76c444c555fba9349457f09736d033903f9fbe576babf"
+    sha256 cellar: :any_skip_relocation, big_sur:       "63a4e1edb9625b5f3e11df84a840979330b0bd3af8d77dec25fe09e92698719f"
+    sha256 cellar: :any_skip_relocation, catalina:      "b6906565df2c7862dd7979ef3599414bc59f0b78b05b0e3a9dbf411ab29fad83"
+    sha256 cellar: :any_skip_relocation, mojave:        "a59602b1643b95845ab9d1b6ecd68d1231ee825ac68fadb577e93d85b9b99ac9"
   end
 
   def install
-    system "make", "LDLIBS=''"
+    on_macos do
+      # LDLIBS='' fixes: ld: library not found for -lrt
+      system "make", "LDLIBS=''"
+    end
+    on_linux do
+      system "make"
+    end
     system "make", "install", "PREFIX=#{prefix}"
   end
 
   test do
     shell_output("#{bin}/babeld -I #{testpath}/test.pid -L #{testpath}/test.log", 1)
-    expected = <<~EOS
-      Couldn't tweak forwarding knob.: Operation not permitted
-      kernel_setup failed.
-    EOS
-    assert_equal expected, (testpath/"test.log").read
+    assert_match "kernel_setup failed", (testpath/"test.log").read
   end
 end

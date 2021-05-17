@@ -1,42 +1,49 @@
 class ClojureLsp < Formula
   desc "Language Server (LSP) for Clojure"
-  homepage "https://github.com/snoe/clojure-lsp"
-  url "https://github.com/snoe/clojure-lsp/archive/release-20190408T040839.tar.gz"
-  version "20190408"
-  sha256 "79c6d812a8ef4af2cfdd78c4b9aa96674ff9fb8dfeb27869215caa4aee954fae"
-  head "https://github.com/snoe/clojure-lsp.git"
+  homepage "https://github.com/clojure-lsp/clojure-lsp"
+  url "https://github.com/clojure-lsp/clojure-lsp.git",
+      tag:      "2021.05.06-19.44.00",
+      revision: "081137d6ab31768be18b04267a415ccca153a5e1"
+  version "20210506T194400"
+  license "MIT"
+  head "https://github.com/clojure-lsp/clojure-lsp.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "95114b39a9096f7279018026bb99a2aa5ba75e828ec66769d7e795409111b6d1" => :catalina
-    sha256 "6d37d3893a1cfb5ecdd5ea3a543ca5ccef2cf25d62596e74486f6dff6ce3d29d" => :mojave
-    sha256 "d9f2d7991242c2803059b3319bcda915de5c4d5b523ee5da067d28768e8b5a8a" => :high_sierra
-    sha256 "d99ed04247a05fb3e3e87b2237832fdf25abc02cc7c2f03ff12ce2b66f7b4e34" => :sierra
+  livecheck do
+    url :stable
+    regex(%r{^(?:release[._-])?v?(\d+(?:[T/.-]\d+)+)$}i)
+    strategy :git do |tags, regex|
+      # Convert tags like `2021.03.01-19.18.54` to `20210301T191854` format
+      tags.map { |tag| tag[regex, 1]&.gsub(".", "")&.gsub(%r{[/-]}, "T") }.compact
+    end
   end
 
-  depends_on "leiningen" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "541859319d07784bcedb7dd97036940d532d0f12a3bd39f03d9cafbe9f8f9ba7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "02a65c4e350f5fd0745ed640f4645f52e89c7c9239d875e2910c0a6b2a127b89"
+    sha256 cellar: :any_skip_relocation, catalina:      "3f4041f6a74994313d2d09c5515155986dfd3af59150b0e28571865c96db5924"
+    sha256 cellar: :any_skip_relocation, mojave:        "e3a860d107d18f37a051330c90601a53b6ff3c9cfc9872fa7523d2872e08becb"
+  end
+
+  depends_on "clojure" => :build
+  # The Java Runtime version only recognizes class file versions up to 52.0
+  depends_on "openjdk@11"
 
   def install
-    system "lein", "uberjar"
-    jar = Dir["target/clojure-lsp-*-standalone.jar"][0]
+    system "clojure", "-X:prod-jar"
+    jar = "clojure-lsp.jar"
     libexec.install jar
-    bin.write_jar_script libexec/File.basename(jar), "clojure-lsp"
+    bin.write_jar_script libexec/jar, "clojure-lsp", java_version: "11"
   end
 
   test do
-    require "Open3"
+    input =
+      "Content-Length: 152\r\n" \
+      "\r\n" \
+      "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"" \
+      "processId\":88075,\"rootUri\":null,\"capabilities\":{},\"trace\":\"ver" \
+      "bose\",\"workspaceFolders\":null}}\r\n"
 
-    begin
-      stdin, stdout, _, wait_thr = Open3.popen3("#{bin}/clojure-lsp")
-      pid = wait_thr.pid
-      stdin.write <<~EOF
-        Content-Length: 58
-
-        {"jsonrpc":"2.0","method":"initialize","params":{},"id":1}
-      EOF
-      assert_match "Content-Length", stdout.gets("\n")
-    ensure
-      Process.kill "SIGKILL", pid
-    end
+    output = pipe_output("#{bin}/clojure-lsp", input, 0)
+    assert_match "Content-Length", output
   end
 end

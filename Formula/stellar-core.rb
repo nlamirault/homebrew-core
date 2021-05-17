@@ -1,16 +1,16 @@
 class StellarCore < Formula
-  desc "The backbone of the Stellar (XLM) network"
+  desc "Backbone of the Stellar (XLM) network"
   homepage "https://www.stellar.org/"
   url "https://github.com/stellar/stellar-core.git",
-      :tag      => "v12.1.0",
-      :revision => "8afe57913a08deffa247d7b5f837e0b28a54b864"
+      tag:      "v17.0.0",
+      revision: "096f6a766ed6aa08e13519371e842b90f01df841"
+  license "Apache-2.0"
   head "https://github.com/stellar/stellar-core.git"
 
   bottle do
-    cellar :any
-    sha256 "02a0d4e82e45367e4622e517e703e49b3e6af4b80a24a36741cf0616638c98d7" => :catalina
-    sha256 "bda5192d4d3fe8307cbdcfccdebb8c751b3d899d4ccea3f3cbe14a6141d5cfe8" => :mojave
-    sha256 "83ad5766310af3d84f485a66c233cef5c096029082a14e3c278d5edc9ff2d50e" => :high_sierra
+    sha256 cellar: :any, big_sur:  "0e5b6e3a85c5f9931410223f9a5c9e3f7123149afc2cd217450b5260fc2eeec0"
+    sha256 cellar: :any, catalina: "44844a59dc93e1223fc7cfe21839b64458663a57aa4148d0e02124d317abaf9e"
+    sha256 cellar: :any, mojave:   "52b3a2b9822d2e761d097a36ad0112625d7ddac3bac7211b0b28f98617b8ba3e"
   end
 
   depends_on "autoconf" => :build
@@ -19,8 +19,21 @@ class StellarCore < Formula
   depends_on "pandoc" => :build
   depends_on "pkg-config" => :build
   depends_on "parallel" => :test
+  depends_on "libpq"
   depends_on "libpqxx"
   depends_on "libsodium"
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+
+  on_linux do
+    depends_on "gcc"
+  end
+
+  # Needs libraries at runtime:
+  # /usr/lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.22' not found
+  # Upstream has explicitly stated gcc-5 is too old: https://github.com/stellar/stellar-core/issues/1903
+  fails_with gcc: "5"
 
   def install
     system "./autogen.sh"
@@ -33,6 +46,8 @@ class StellarCore < Formula
   end
 
   test do
-    system "#{bin}/stellar-core", "test", "'[bucket],[crypto],[herder],[upgrades],[accountsubentriescount],[bucketlistconsistent],[cacheisconsistent],[fs]'"
+    system "#{bin}/stellar-core", "test",
+      "'[bucket],[crypto],[herder],[upgrades],[accountsubentriescount]," \
+      "[bucketlistconsistent],[cacheisconsistent],[fs]'"
   end
 end

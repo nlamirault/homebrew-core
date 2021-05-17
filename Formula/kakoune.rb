@@ -1,25 +1,40 @@
 class Kakoune < Formula
   desc "Selection-based modal text editor"
   homepage "https://github.com/mawww/kakoune"
-  url "https://github.com/mawww/kakoune/releases/download/v2019.07.01/kakoune-2019.07.01.tar.bz2"
-  sha256 "8cf978499000bd71a78736eaee5663bd996f53c4e610c62a9bd97502a3ed6fd3"
+  url "https://github.com/mawww/kakoune/releases/download/v2020.09.01/kakoune-2020.09.01.tar.bz2"
+  sha256 "861a89c56b5d0ae39628cb706c37a8b55bc289bfbe3c72466ad0e2757ccf0175"
+  license "Unlicense"
   head "https://github.com/mawww/kakoune.git"
 
-  bottle do
-    cellar :any
-    sha256 "0cd60b373efe3e4b89576295a374405c4a3819a945c091b18e18d18de316879c" => :catalina
-    sha256 "7cc097196707ad5f212b825b66f9de7f128240295fa7ccd097314c5a1145b358" => :mojave
-    sha256 "755433189f53b8a410ea4659e8d9c20b26c657c4983ebd882d297118856428db" => :high_sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on "asciidoc" => :build
-  depends_on "docbook-xsl" => :build
-  depends_on :macos => :high_sierra # needs C++17
+  bottle do
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "6a6af6d41f893e851691984867efeee176098f47c881d5fe77d8534bc4086375"
+    sha256 cellar: :any, big_sur:       "61064437727a2eb062b89941b25fb46c017d350e8947e867e72f51f591d030ad"
+    sha256 cellar: :any, catalina:      "9cb8ffd67651eab6f269daab2bbf4e66adf4f7dad4029a3285631a3615cf1514"
+    sha256 cellar: :any, mojave:        "00c9127f14d643eee79fc64d02874bc131dad426fb11580b5d4fa43a3a51007c"
+  end
+
+  depends_on macos: :high_sierra # needs C++17
   depends_on "ncurses"
 
-  def install
-    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
+  uses_from_macos "libxslt" => :build
 
+  on_linux do
+    depends_on "binutils" => :build
+    depends_on "linux-headers" => :build
+    depends_on "pkg-config" => :build
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
+  fails_with gcc: "6"
+
+  def install
     cd "src" do
       system "make", "install", "debug=no", "PREFIX=#{prefix}"
     end

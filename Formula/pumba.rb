@@ -1,33 +1,40 @@
 class Pumba < Formula
   desc "Chaos testing tool for Docker"
   homepage "https://github.com/alexei-led/pumba"
-  url "https://github.com/alexei-led/pumba/archive/0.6.5.tar.gz"
-  sha256 "d3f19bba5520ec2b26554b807e31596a1cf16da60cf34d945399cf45a369300d"
+  url "https://github.com/alexei-led/pumba/archive/0.7.8.tar.gz"
+  sha256 "d0f9edf2a5671695de1b81af5f897b76edbbaf4fed036767d45a87bdbcf5eef1"
+  license "Apache-2.0"
   head "https://github.com/alexei-led/pumba.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5639041fbd2e4653fe922f419332e28255fb7d32ec7f76c63839324738cfffb4" => :catalina
-    sha256 "257ef1308a0e73183d0aba22aee88c5e1cf7dc8ab8f673b556e63c43652a03bc" => :mojave
-    sha256 "c6c4c6181cd79cbb52c0e52b4b952163427f66125d03028b40ac38a497896613" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "0d2b57562ed082742216e8576a8d02cbc9301285aac0159909e611795f3e83b4"
+    sha256 cellar: :any_skip_relocation, big_sur:       "6543f05aaa8b1ead7d70a379daca89bce7cdf17f5ba32b751ec6af9d836cba9a"
+    sha256 cellar: :any_skip_relocation, catalina:      "2f68ee710074baa934c3028d8240110053d37c16edb9f813667b879254548d39"
+    sha256 cellar: :any_skip_relocation, mojave:        "0f84af117d6d6dd0224a849875a0cecf27de241654ef7d69fcf76d4bc09dd518"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    src = buildpath/"src/github.com/alexei-led/pumba"
-    src.install buildpath.children
-    src.cd do
-      system "go", "build", "-o", bin/"pumba", "-ldflags",
-             "-X main.Version=#{version}", "./cmd"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-ldflags", "-s -w -X main.Version=#{version}",
+           "-trimpath", "-o", bin/"pumba", "./cmd"
+    prefix.install_metafiles
   end
 
   test do
     output = pipe_output("#{bin}/pumba rm test-container 2>&1")
-    assert_match "Is the docker daemon running?", output
+
+    on_macos do
+      assert_match "Is the docker daemon running?", output
+    end
+
+    on_linux do
+      assert_match "no containers to remove", output
+    end
   end
 end

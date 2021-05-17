@@ -1,20 +1,30 @@
 class Iozone < Formula
   desc "File system benchmark tool"
-  homepage "http://www.iozone.org/"
-  url "http://www.iozone.org/src/current/iozone3_487.tar"
-  sha256 "2c488a7ccddd624fd557af16e71442c367b131d6178e1b4023bbd532bacdda59"
+  homepage "https://www.iozone.org/"
+  url "https://www.iozone.org/src/current/iozone3_491.tgz"
+  sha256 "057d310cc0c16fcb35ac6de25bee363d54503377cbd93a6122797f8277aab6f0"
+  license :cannot_represent
+
+  livecheck do
+    url "https://www.iozone.org/src/current/"
+    regex(/href=.*?iozone[._-]?v?(\d+(?:[._]\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "704c25cbbe9ac821b7f4bef8c23b5ac4df5117d15574062f77247769bca8e6ef" => :catalina
-    sha256 "ed77f59ddfb45e302b60e80d2f4a842e838af5973df7e6dc7d95a3d27c06d0e8" => :mojave
-    sha256 "c0f0f7a10f585f40435d1d0a07322739925c9cae2afeb8c8714fe9e121a41572" => :high_sierra
-    sha256 "09eda4f32813be63ba4e05dee24a9cac6805667d022fb8a2ed42ef8b0fafe9dc" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4d23cb835d535b2b6a553e5e1bb1a9cceeba50745c45e97b53ce2057b9ef5d77"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a6f0a32d9de27662d82b075d9bb59944a496c2782e5ce3e8b50228fbf48b1749"
+    sha256 cellar: :any_skip_relocation, catalina:      "a9865b6a1f2528acd3734a0833853a26a2b66c53c3f0e7f11be333a526c9d29d"
+    sha256 cellar: :any_skip_relocation, mojave:        "9fd8e8232cb83eaeabc297ec4c89ec264e91fab8991d86c9aa57385f7143bf48"
   end
 
   def install
     cd "src/current" do
-      system "make", "macosx", "CC=#{ENV.cc}"
+      on_macos do
+        system "make", "macosx", "CC=#{ENV.cc}"
+      end
+      on_linux do
+        system "make", "linux", "CC=#{ENV.cc}"
+      end
       bin.install "iozone"
       pkgshare.install %w[Generate_Graphs client_list gengnuplot.sh gnu3d.dem
                           gnuplot.dem gnuplotps.dem iozone_visualizer.pl

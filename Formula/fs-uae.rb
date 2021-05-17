@@ -1,15 +1,21 @@
 class FsUae < Formula
   desc "Amiga emulator"
   homepage "https://fs-uae.net/"
-  url "https://fs-uae.net/stable/3.0.0/fs-uae-3.0.0.tar.gz"
-  sha256 "221568b8f78bac352f84297f0cabe984d3da4f808e39cc3191541c02b389c964"
+  url "https://fs-uae.net/stable/3.0.5/fs-uae-3.0.5.tar.gz"
+  sha256 "f26ec42e03cf1a7b53b6ce0d9845aa45bbf472089b5ec046b3eb784ec6859fe3"
+  license "GPL-2.0"
+  revision 1
+
+  livecheck do
+    url "https://fs-uae.net/download"
+    regex(/href=.*?fs-uae[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "99c0efd17141470c96e857a0e00696f2d0e6c901d7fa39a2efe30cf5112203ee" => :catalina
-    sha256 "a520a09e6a703765acaf3829b901b86d6f6503ef2887f1c5495ba6f309443a23" => :mojave
-    sha256 "ece2223f92dbe078b29dda91e691551d6788f8ea22fa7cc46919b125c4d62fb1" => :high_sierra
-    sha256 "f4b193b58774d21e007cd83a564ee8d2efab0f99bb213d91424c56f472ae35ee" => :sierra
+    sha256 cellar: :any, big_sur:     "37e9318b578ea42dbfa769ecc23bfa7bf91a25417a6145db56d415fafece7dd2"
+    sha256 cellar: :any, catalina:    "ab0fdecdc3ee1e4ed70baf7a57bc46d92b85b684c97d680c9fbfab5b280a7da4"
+    sha256 cellar: :any, mojave:      "223c490857dc42ec051f68531fbcc2ceffd142cd8f56b4b18a0d1c2134c6fb03"
+    sha256 cellar: :any, high_sierra: "61bfc89218feb2fb4ae2da82e68d4d81dcb40d7ce6003d0a5d39f675b6327f11"
   end
 
   head do
@@ -26,7 +32,6 @@ class FsUae < Formula
   depends_on "glib"
   depends_on "libmpeg2"
   depends_on "libpng"
-  depends_on "openal-soft" if MacOS.version == :mavericks
   depends_on "sdl2"
 
   def install
@@ -39,7 +44,7 @@ class FsUae < Formula
     system "make"
     system "make", "install"
 
-    # Remove unncessary files
+    # Remove unnecessary files
     (share/"applications").rmtree
     (share/"icons").rmtree
     (share/"mime").rmtree

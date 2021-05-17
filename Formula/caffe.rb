@@ -3,12 +3,19 @@ class Caffe < Formula
   homepage "https://caffe.berkeleyvision.org/"
   url "https://github.com/BVLC/caffe/archive/1.0.tar.gz"
   sha256 "71d3c9eb8a183150f965a465824d01fe82826c22505f7aa314f700ace03fa77f"
-  revision 15
+  license "BSD-2-Clause"
+  revision 32
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "b48ecaa34cfa9d0fd7207c48f73bae7e13dd350b46d1242cdcca9e5deba764a8" => :catalina
-    sha256 "94ac9647308a9de9281e676d8ecfdb4e696972f0b71f9e5509d585fba9560aaa" => :mojave
-    sha256 "547152fc04024cc95a02bc91668a020e05f6d7d6878f70d8f894e8d1f725608e" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "3d767a5dba752ede439b5b4fc95990f5d653f94018a9b752d191ef1fd059f362"
+    sha256               big_sur:       "58a682468d529c145ae91d0aeca02ae845a135ba8131b44f2af793dd5f470b3a"
+    sha256               catalina:      "b39d7b5b0ee21a1c669383643093bcb9607def6d5d5748ab967e2e4d5a931cc1"
+    sha256               mojave:        "9f97632b96b5db4fa23d9d8325a69bb078dfad6a44df045416a0031131a95851"
   end
 
   depends_on "cmake" => :build
@@ -31,8 +38,8 @@ class Caffe < Formula
   # Fix compilation with OpenCV 4
   # https://github.com/BVLC/caffe/issues/6652
   patch do
-    url "https://github.com/BVLC/caffe/pull/6638.diff?full_index=1"
-    sha256 "6a6368d715284fabfa96660b6d24d1f4f419f3e6cdddab9a7293954fee4ec2bc"
+    url "https://github.com/BVLC/caffe/commit/0a04cc2ccd37ba36843c18fea2d5cbae6e7dd2b5.patch?full_index=1"
+    sha256 "f79349200c46fc1228ab1e1c135a389a6d0c709024ab98700017f5f66b373b39"
   end
 
   def install

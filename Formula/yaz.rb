@@ -1,14 +1,21 @@
 class Yaz < Formula
   desc "Toolkit for Z39.50/SRW/SRU clients/servers"
   homepage "https://www.indexdata.com/yaz"
-  url "http://ftp.indexdata.dk/pub/yaz/yaz-5.27.2.tar.gz"
-  sha256 "09fdebc78ef169194f3d275ede5ef39087484c1395bf518484051bba81cb154e"
+  url "http://ftp.indexdata.dk/pub/yaz/yaz-5.30.3.tar.gz"
+  sha256 "f0497fd8420574efab4e5738ea3b70787a6e8042f585156baa30bdc1911ba552"
+  license "BSD-3-Clause"
+  revision 2
+
+  livecheck do
+    url "http://ftp.indexdata.dk/pub/yaz/"
+    regex(/href=.*?yaz[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "dec79484e11ffb10ac51d1d902ac9860036af7bea924a0c3022b40d9f6df8c2f" => :catalina
-    sha256 "765a114f35202bf28fd7a05011d7c8e388929a2c10a6c03f4b5a1348684296ea" => :mojave
-    sha256 "047af6554ea6d94e46ca01d8c146a0ea8414fc5e2c0956e90e7a33cce8a133dc" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "0f8e1625ff8a952570759b4ae0252c979458212c0ef7a66addbc3444e18ac2cb"
+    sha256 cellar: :any, big_sur:       "14ac635a852f4a987485398ecdd617de5c4c5855b2c6a7759d266f93ac50424a"
+    sha256 cellar: :any, catalina:      "d8e464bd3b31a9adfc2d4288477746cc8f548270dce632bdcf7d69fd0cb7603a"
+    sha256 cellar: :any, mojave:        "d5df6093f4f85f9e13c13c245fc9387e2f9b1fb50fd5096bc894814e8bc0727c"
   end
 
   head do
@@ -20,6 +27,8 @@ class Yaz < Formula
 
   depends_on "pkg-config" => :build
   depends_on "icu4c"
+
+  uses_from_macos "libxml2"
 
   def install
     system "./buildconf.sh" if build.head?

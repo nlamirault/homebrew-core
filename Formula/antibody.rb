@@ -1,29 +1,22 @@
 class Antibody < Formula
-  desc "The fastest shell plugin manager"
+  desc "Shell plugin manager"
   homepage "https://getantibody.github.io/"
-  url "https://github.com/getantibody/antibody/archive/v4.2.0.tar.gz"
-  sha256 "552d94e2a0e5b3b93f8659f0a9ed5bdae4622c46a2418ca2a40573862fc991dc"
+  url "https://github.com/getantibody/antibody/archive/v6.1.1.tar.gz"
+  sha256 "87bced5fba8cf5d587ea803d33dda72e8bcbd4e4c9991a9b40b2de4babbfc24f"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "2dd2e53eecdaa34b50562b657a445b4db885b960ebfd3dae9fcbcf995ae6173b" => :catalina
-    sha256 "bd9e7f0f71fc030cb850f9e79f08c7ea371b0e22b129c6e2d566345a12528cb2" => :mojave
-    sha256 "26e2787989cbfb1c795884d0c3ccc855442c1362aa242e2d4f91bc9b5393c1f5" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "720cfb0bfae9001e929d57101e482b1206f5d2b6f0ca546681c8a5450113c74d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "68b409c42eeab15437a9c64a55e13f69c37f6e085bcff794bb1f9a8ca6419e98"
+    sha256 cellar: :any_skip_relocation, catalina:      "572351da6247daf6bf29afbdcc8ff10c4fe47e9e413c2ae0df0dd249e855599d"
+    sha256 cellar: :any_skip_relocation, mojave:        "c33467a9d42a9c767bd2d3382937e9f1dcf9bce2cb45fe3de6adb736ae2d6e89"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "7af2bd8779f129597713ebd6155d493616f4ed4b2344cac9db84191b01f3110c"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    dir = buildpath/"src/github.com/antibody/antibody"
-    dir.install buildpath.children
-
-    cd dir do
-      system "go", "mod", "vendor"
-      system "go", "build", "-ldflags", "-X main.version=#{version}"
-      bin.install "antibody"
-    end
+    system "go", "build", "-ldflags", "-s -w -X main.version=#{version}", "-trimpath", "-o", bin/"antibody"
   end
 
   test do
